@@ -1,0 +1,38 @@
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+  text-align: center;
+  /* cursor: none; */
+}
+
+.board-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  padding: 8px;
+}
+
+.board {
+  border: 1px solid;
+  overflow: hidden;
+}
+
+/* .board rect {
+  transition: all 300ms ease;
+}
+
+.board text {
+  transition: font-size 300ms ease;
+} */
+
+canvas {
+  border: 1px solid;
+}
