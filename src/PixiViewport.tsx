@@ -1,61 +1,72 @@
-import { PixiComponent, useApp } from "@inlet/react-pixi";
-import { Viewport } from "pixi-viewport";
-import { forwardRef } from "react";
+import { PixiComponent, useApp } from '@inlet/react-pixi';
+import { Application } from '@pixi/app';
+import { IViewportOptions, Viewport } from 'pixi-viewport';
+import { forwardRef, ReactNode } from 'react';
 
-const PixiViewportComponent = PixiComponent("Viewport", {
-  create(props) {
-    const { app, ...viewportProps } = props;
+type ViewportProps = {
+  app: Application;
+  plugins?: string[];
+} & IViewportOptions &
+  ReactNode;
 
-    const viewport = new Viewport({
-      ticker: app.ticker,
-      interaction: app.renderer.plugins.interaction,
-      ...viewportProps
-    });
+const PixiViewportComponent = PixiComponent<ViewportProps, Viewport>(
+  'Viewport',
+  {
+    create(props) {
+      // @ts-ignore
+      const { app, ...viewportProps } = props;
 
-    // activate plugins
-    (props.plugins || []).forEach((plugin) => {
-      viewport[plugin]();
-    });
+      const viewport = new Viewport({
+        ticker: app.ticker,
+        interaction: app.renderer.plugins.interaction,
+        ...viewportProps,
+      });
 
-    setTimeout(() => {
-      viewport.resize(
-        props.width,
-        props.height,
-        props.worldWidth,
-        props.worldHeight
-      );
-      viewport.fit(false, props.worldWidth, props.worldHeight);
-    }, 0);
+      // activate plugins
+      (props.plugins || []).forEach((plugin) => {
+        // @ts-ignore
+        viewport[plugin]();
+      });
 
-    return viewport;
-  },
-  applyProps(viewport, _oldProps, _newProps) {
-    const {
-      plugins: oldPlugins,
-      children: oldChildren,
-      ...oldProps
-    } = _oldProps;
-    const {
-      plugins: newPlugins,
-      children: newChildren,
-      ...newProps
-    } = _newProps;
+      setImmediate(() => {
+        // @ts-ignore
+        viewport.fit(false, props.worldWidth, props.worldHeight);
+      });
 
-    Object.keys(newProps).forEach((p) => {
-      if (oldProps[p] !== newProps[p]) {
-        viewport[p] = newProps[p];
-      }
-    });
-  },
-  didMount() {
-    console.log("viewport mounted");
+      return viewport;
+    },
+    applyProps(viewport, _oldProps, _newProps) {
+      const {
+        plugins: oldPlugins,
+        // @ts-ignore
+        children: oldChildren,
+        ...oldProps
+      } = _oldProps;
+      const {
+        plugins: newPlugins,
+        // @ts-ignore
+        children: newChildren,
+        ...newProps
+      } = _newProps;
+
+      Object.keys(newProps).forEach((p) => {
+        // @ts-ignore
+        if (oldProps[p] !== newProps[p]) {
+          // @ts-ignore
+          viewport[p] = newProps[p];
+        }
+      });
+    },
+    didMount() {
+      console.log('viewport mounted');
+    },
   }
-});
+);
 
 // create a component that can be consumed
 // that automatically pass down the app
-const PixiViewport = forwardRef((props, ref) => (
-  <PixiViewportComponent ref={ref} app={useApp()} {...props} />
-));
+const PixiViewport = forwardRef<Viewport, Omit<ViewportProps, 'app'>>(
+  (props, ref) => <PixiViewportComponent ref={ref} app={useApp()} {...props} />
+) as React.FC<Omit<ViewportProps, 'app'>>;
 
 export default PixiViewport;

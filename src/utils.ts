@@ -1,4 +1,4 @@
-import { Vector2 } from "./types";
+import { Vector2 } from './types';
 
 export const times = (num: number): number[] =>
   Array(num)
@@ -21,16 +21,29 @@ export function last<T>(arr: T[]): T {
   return arr[arr.length - 1];
 }
 
+export const pick =
+  <T>(keys: string[]) =>
+  (obj: T) =>
+    Object.fromEntries(
+      Object.entries(obj).filter(([key]) => keys.includes(key))
+    );
+
+export const hasDiffBy = <T extends Record<string, any>>(
+  keys: string[],
+  prev: T,
+  next: T
+) => keys.some((key) => prev[key] !== next[key]);
+
 export const indexToGrid = (index: number, gridSize: number): Vector2 =>
   [index % gridSize, Math.floor(index / gridSize)] as Vector2;
 
 export const gridToIndex = ([c, r]: Vector2, gridSize: number): number =>
   r * gridSize + c;
 
-export const getKey = (point: Vector2): string => point.join("-");
+export const getKey = (point: Vector2): string => point.join('-');
 
 export const keyToVector = (pointKey: string): Vector2 =>
-  pointKey.split("-").map(Number) as Vector2;
+  pointKey.split('-').map(Number) as Vector2;
 
 export const getNeighbors = ([x, y]: Vector2, gridSize: number): Vector2[] =>
   times(9).reduce<Vector2[]>((acc, i) => {

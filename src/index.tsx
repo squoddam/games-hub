@@ -1,13 +1,11 @@
-import { render } from "react-dom";
+import { render } from 'react-dom';
 
-import { gsap } from "gsap";
-import { PixiPlugin } from "gsap/PixiPlugin";
+import * as PIXI from 'pixi.js';
 
-import App from "./App";
+import App from './App';
 
-gsap.registerPlugin(PixiPlugin);
+PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
+PIXI.settings.ROUND_PIXELS = true;
 
-// console.log("index");
-
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 render(<App />, rootElement);
