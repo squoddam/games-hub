@@ -1,5 +1,5 @@
-import { memo, useState } from 'react';
-import { DispatchAction, useActions, useWindowResize } from './hooks';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { useWindowResize } from './hooks';
 import {
   getKey,
   getNeighbors,
@@ -11,7 +11,7 @@ import {
 import { Vector2 } from './types';
 import './styles.css';
 
-import Cell from './Cell';
+import Cell, { CellProps } from './Cell';
 import produce from 'immer';
 import { Container, Stage } from '@inlet/react-pixi';
 import PixiViewport from './PixiViewport';
@@ -157,9 +157,9 @@ function* clearSpaceGen(
 
 const CellGroup = memo<{
   board: BoardCell[];
-  dispatch: DispatchAction;
+  onCellClick: CellProps['onClick'];
   isGameOver: boolean;
-}>(({ board, dispatch, isGameOver }) => (
+}>(({ board, onCellClick, isGameOver }) => (
   <>
     {board.map(({ coords, isMine, nearbyMinesCount, isRevealed }) => (
       <Cell
@@ -167,7 +167,7 @@ const CellGroup = memo<{
         coords={coords}
         cellSize={CELL_SIZE}
         cellBorderPadding={CELL_BORDER_PADDING}
-        dispatch={dispatch}
+        onClick={onCellClick}
         isRevealed={isGameOver || isRevealed}
         isMine={isMine}
         nearbyMinesCount={nearbyMinesCount}
@@ -189,45 +189,49 @@ export default function App() {
     setSideSize(Math.min(window.innerWidth, window.innerHeight) - 16);
   });
 
-  const dispatch = useActions({
-    CELL_CLICK: ({ c, r }: { c: number; r: number }) => {
-      setBoard(
-        produce((draft) => {
-          const index = gridToIndex([c, r], GRID_SIZE);
+  const boardStateRef = useRef(board);
 
-          const cell = draft[index];
+  useEffect(() => {
+    boardStateRef.current = board;
+  }, [board]);
 
-          if (cell.isMine) {
-            setIsGameOver(true);
-          }
+  const handleCellClick = useCallback<CellProps['onClick']>(({ c, r }) => {
+    setBoard(
+      produce((draft) => {
+        const index = gridToIndex([c, r], GRID_SIZE);
 
-          cell.isRevealed = true;
-        })
-      );
+        const cell = draft[index];
 
-      const clearSpace = clearSpaceGen(GRID_SIZE, board, [c, r]);
-
-      const updateBoard = () => {
-        const layerToClear = clearSpace.next().value as Vector2[];
-
-        if (layerToClear.length > 0) {
-          setBoard(
-            produce((draft) => {
-              layerToClear.forEach((coords) => {
-                const index = gridToIndex(coords, GRID_SIZE);
-
-                draft[index].isRevealed = true;
-              });
-            })
-          );
-
-          setTimeout(updateBoard, 30);
+        if (cell.isMine) {
+          setIsGameOver(true);
         }
-      };
 
-      updateBoard();
-    },
-  });
+        cell.isRevealed = true;
+      })
+    );
+
+    const clearSpace = clearSpaceGen(GRID_SIZE, boardStateRef.current, [c, r]);
+
+    const updateBoard = () => {
+      const layerToClear = clearSpace.next().value as Vector2[];
+
+      if (layerToClear.length > 0) {
+        setBoard(
+          produce((draft) => {
+            layerToClear.forEach((coords) => {
+              const index = gridToIndex(coords, GRID_SIZE);
+
+              draft[index].isRevealed = true;
+            });
+          })
+        );
+
+        setTimeout(updateBoard, 30);
+      }
+    };
+
+    updateBoard();
+  }, []);
 
   return (
     <div className="App">
@@ -253,7 +257,7 @@ export default function App() {
               />
               <CellGroup
                 board={board}
-                dispatch={dispatch}
+                onCellClick={handleCellClick}
                 isGameOver={isGameOver}
               />
               {/* <Rect x={15} y={15} width={10} height={10} fill={0xff0000} /> */}

@@ -19,7 +19,7 @@ export const addToAnimations = <T>({
 }: {
   fromProps: T;
   toProps: T;
-  onUpdate: (props: AnyObject) => void;
+  onUpdate: (props: T) => void;
   config: anime.AnimeParams;
 }) => {
   const id = nanoid();
@@ -39,6 +39,7 @@ export const addToAnimations = <T>({
 
         delete animations[id];
       } else {
+        // @ts-ignore
         onUpdate(animations[id].toProps);
       }
     }

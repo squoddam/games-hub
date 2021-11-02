@@ -15,19 +15,3 @@ export const useWindowResize = (cb?: () => void) => {
     };
   }, [cb]);
 };
-
-export type DispatchAction = (actionType: string, payload: any) => void;
-
-export const useActions = (actions: Record<string, (payload: any) => void>) => {
-  const actionsRef = useRef(actions);
-
-  useEffect(() => {
-    actionsRef.current = actions;
-  }, [actions]);
-
-  const dispatch = useCallback<DispatchAction>((actionType, payload) => {
-    actionsRef.current[actionType]?.(payload);
-  }, []);
-
-  return dispatch;
-};

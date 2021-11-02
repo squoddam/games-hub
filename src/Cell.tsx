@@ -21,15 +21,7 @@ const getTextStyle = (fontSize: number, color: number = 0x000000) =>
     stroke: color,
   });
 
-const Cell = ({
-  coords,
-  cellSize,
-  cellBorderPadding,
-  isRevealed,
-  isMine,
-  nearbyMinesCount,
-  dispatch,
-}: {
+export type CellProps = {
   coords: Vector2;
   cellSize: number;
   cellBorderPadding: number;
@@ -37,8 +29,18 @@ const Cell = ({
   isMine: boolean;
   nearbyMinesCount?: number;
 
-  dispatch: (actionType: string, payload: { r: number; c: number }) => void;
-}) => {
+  onClick: ({ r, c }: { r: number; c: number }) => void;
+};
+
+const Cell = ({
+  coords,
+  cellSize,
+  cellBorderPadding,
+  isRevealed,
+  isMine,
+  nearbyMinesCount,
+  onClick,
+}: CellProps) => {
   const padding = useMemo(
     () => cellBorderPadding + (isRevealed ? 5 : 0),
     [cellBorderPadding, isRevealed]
@@ -71,11 +73,6 @@ const Cell = ({
     config: { duration: 300 },
   });
 
-  const handleClick = () => {
-    console.log({ c, r });
-    dispatch('CELL_CLICK', { c, r });
-  };
-
   return (
     <Container>
       {isRevealed && isMine && (
@@ -100,7 +97,7 @@ const Cell = ({
         coordsKey={getKey(coords)}
         {...to}
         radius={20}
-        onClick={handleClick}
+        onClick={() => onClick({ c, r })}
         animConfig={{ duration: 300 }}
       />
     </Container>
