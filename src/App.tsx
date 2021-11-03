@@ -16,6 +16,19 @@ import produce from 'immer';
 import { Container, Stage } from '@inlet/react-pixi';
 import PixiViewport from './PixiViewport';
 import Rect from './Primitives/Rect';
+import { Howl } from 'howler';
+
+const clickSound = new Howl({
+  src: '/click.ogg',
+});
+
+const loseSound = new Howl({
+  src: '/lose.mp3',
+});
+
+const winSound = new Howl({
+  src: '/win.wav',
+});
 
 const STAGE_OPTIONS = {
   antialias: true,
@@ -136,7 +149,10 @@ function* clearSpaceGen(
         }))
         .filter(
           ({ cellKey, index }) =>
-            board[index] && !board[index].isMine && !visitedCells[cellKey]
+            board[index] &&
+            !board[index].isMine &&
+            !board[index].isRevealed &&
+            !visitedCells[cellKey]
         )
         .map(({ cellKey }) => {
           visitedCells[cellKey] = true;
@@ -176,6 +192,8 @@ const CellGroup = memo<{
   </>
 ));
 
+let openCellsCount = 0;
+
 export default function App() {
   const [sideSize, setSideSize] = useState(
     Math.min(window.innerWidth, window.innerHeight) - 16
@@ -196,6 +214,8 @@ export default function App() {
   }, [board]);
 
   const handleCellClick = useCallback<CellProps['onClick']>(({ c, r }) => {
+    let isGameOverRef = false;
+
     setBoard(
       produce((draft) => {
         const index = gridToIndex([c, r], GRID_SIZE);
@@ -204,11 +224,17 @@ export default function App() {
 
         if (cell.isMine) {
           setIsGameOver(true);
-        }
 
-        cell.isRevealed = true;
+          isGameOverRef = true;
+
+          loseSound.play();
+        }
       })
     );
+
+    if (isGameOverRef) {
+      return;
+    }
 
     const clearSpace = clearSpaceGen(GRID_SIZE, boardStateRef.current, [c, r]);
 
@@ -216,6 +242,11 @@ export default function App() {
       const layerToClear = clearSpace.next().value as Vector2[];
 
       if (layerToClear.length > 0) {
+
+        openCellsCount += layerToClear.length;
+
+        clickSound.play();
+
         setBoard(
           produce((draft) => {
             layerToClear.forEach((coords) => {
@@ -226,7 +257,9 @@ export default function App() {
           })
         );
 
-        setTimeout(updateBoard, 30);
+        setTimeout(updateBoard, 80);
+      } else if (GRID_SIZE ** 2 - openCellsCount === MINES_AMOUNT) {
+        winSound.play();
       }
     };
 

@@ -73,6 +73,10 @@ const Cell = ({
     config: { duration: 300 },
   });
 
+  const handleClick = () => {
+    onClick({ c, r });
+  };
+
   return (
     <Container>
       {isRevealed && isMine && (
@@ -97,7 +101,7 @@ const Cell = ({
         coordsKey={getKey(coords)}
         {...to}
         radius={20}
-        onClick={() => onClick({ c, r })}
+        onClick={handleClick}
         animConfig={{ duration: 300 }}
       />
     </Container>
