@@ -81,5 +81,5 @@ export const useAnime = <T>({
       config,
     });
     fromPropsRef.current = toProps;
-  }, [fromProps, toProps, onUpdate]);
+  }, [fromProps, toProps, onUpdate, config]);
 };

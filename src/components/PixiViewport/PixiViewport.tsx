@@ -27,17 +27,6 @@ const PixiViewportComponent = PixiComponent<ViewportProps, Viewport>(
         ...viewportProps,
       });
 
-      // activate plugins
-      (props.plugins || []).forEach((plugin) => {
-        // @ts-ignore
-        viewport[plugin]();
-      });
-
-      setImmediate(() => {
-        // @ts-ignore
-        viewport.fit(false, props.worldWidth, props.worldHeight);
-      });
-
       return viewport;
     },
     applyProps(viewport, _oldProps, _newProps) {
@@ -87,10 +76,13 @@ const PixiViewportComponent = PixiComponent<ViewportProps, Viewport>(
   }
 );
 
-// create a component that can be consumed
-// that automatically pass down the app
-const PixiViewport = forwardRef<Viewport, Omit<ViewportProps, 'app'>>(
-  (props, ref) => <PixiViewportComponent ref={ref} app={useApp()} {...props} />
-) as React.FC<Omit<ViewportProps, 'app'>>;
+const PixiViewport: React.FC<Omit<ViewportProps, 'app'>> = forwardRef<
+  Viewport,
+  Omit<ViewportProps, 'app'>
+>((props, ref) => (
+  <PixiViewportComponent ref={ref} app={useApp()} {...props} />
+));
+
+PixiViewport.displayName = 'PixiViewport';
 
 export default PixiViewport;

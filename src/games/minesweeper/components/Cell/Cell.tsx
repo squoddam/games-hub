@@ -1,12 +1,12 @@
 import { memo, useMemo, useRef } from 'react';
-import { Vector2 } from './types';
+import { Vector2 } from '@/types';
 
-import Rect from './Primitives/Rect';
-import { getKey } from './utils';
+import Rect from '@/components/primitives/Rect';
 import { Container, Text } from '@inlet/react-pixi';
 import { TextStyle, Text as PixiText } from '@pixi/text';
-import { useAnime } from './hooks';
-import Circle from './Primitives/Circle';
+import { useAnime } from '@/hooks';
+import Circle from '@/components/primitives/Circle';
+import { getKey } from '@minesweeper/utils';
 
 const minesCountsColors = [
   0x01579b, 0x019b62, 0xa2c80b, 0xf2b918, 0xf26818, 0xa73e01, 0xa70101,

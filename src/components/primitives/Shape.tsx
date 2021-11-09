@@ -1,6 +1,6 @@
 import { Graphics } from '@inlet/react-pixi';
 import { Graphics as PixiGraphics } from 'pixi.js';
-import { useAnime } from '../hooks';
+import { useAnime } from '../../hooks';
 import { useEffect, useRef } from 'react';
 import anime from 'animejs';
 

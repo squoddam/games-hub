@@ -34,31 +34,5 @@ export const hasDiffBy = <T extends Record<string, any>>(
   next: T
 ) => keys.some((key) => prev[key] !== next[key]);
 
-export const indexToGrid = (index: number, gridSize: number): Vector2 =>
-  [index % gridSize, Math.floor(index / gridSize)] as Vector2;
-
-export const gridToIndex = ([c, r]: Vector2, gridSize: number): number =>
-  r * gridSize + c;
-
-export const getKey = (point: Vector2): string => point.join('-');
-
-export const keyToVector = (pointKey: string): Vector2 =>
-  pointKey.split('-').map(Number) as Vector2;
-
-export const getNeighbors = ([x, y]: Vector2, gridSize: number): Vector2[] =>
-  times(9).reduce<Vector2[]>((acc, i) => {
-    const nX = (i % 3) + x - 1;
-    const nY = Math.floor(i / 3) + y - 1;
-
-    if (
-      (x === nX && y === nY) ||
-      nX < 0 ||
-      nY < 0 ||
-      nX >= gridSize ||
-      nY >= gridSize
-    ) {
-      return acc;
-    }
-
-    return [...acc, [nX, nY]];
-  }, []);
+export const randMinMax = (min: number, max: number): number =>
+  Math.floor(Math.random() * (max - min) + min);
