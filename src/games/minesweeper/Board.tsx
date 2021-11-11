@@ -1,4 +1,12 @@
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { Container, Stage } from '@inlet/react-pixi';
 import produce from 'immer';
 import { Howl } from 'howler';
@@ -44,28 +52,29 @@ const VIEW_BOX_SIDE = CELL_SIZE * GRID_SIZE + BORDER_PADDING * 2;
 
 const MINES_AMOUNT = 10;
 
-let openCellsCount = 0;
+type BoardProps = {
+  sideSize: number;
+  onWin: () => void;
+  onLose: () => void;
+};
 
-const Board = () => {
-  const [sideSize, setSideSize] = useState(0);
-
-  useEffect(() => {
-    setSideSize(Math.min(window.innerWidth, window.innerHeight) - 16);
-  }, []);
-
+const Board = forwardRef(({ sideSize, onWin, onLose }: BoardProps, ref) => {
   const [board, setBoard] = useState<BoardCell[]>(
     createBoardArr(GRID_SIZE, MINES_AMOUNT)
   );
   const [isGameOver, setIsGameOver] = useState(false);
 
-  useWindowResize(() => {
-    setSideSize(Math.min(window.innerWidth, window.innerHeight) - 16);
-  });
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      setBoard(createBoardArr(GRID_SIZE, MINES_AMOUNT));
+      setIsGameOver(false);
+    },
+  }));
 
   const boardStateRef = useRef(board);
 
   useEffect(() => {
-    boardStateRef.current = board;
+    boardStateRef.current = board.slice();
   }, [board]);
 
   const handleCellClick = useCallback<CellProps['onClick']>(({ c, r }) => {
@@ -83,6 +92,9 @@ const Board = () => {
           isGameOverRef = true;
 
           loseSound.play();
+          setTimeout(() => {
+            onLose();
+          }, 0);
         }
       })
     );
@@ -97,8 +109,6 @@ const Board = () => {
       const layerToClear = clearSpace.next().value as Vector2[];
 
       if (layerToClear.length > 0) {
-        openCellsCount += layerToClear.length;
-
         clickSound.play();
 
         setBoard(
@@ -112,8 +122,15 @@ const Board = () => {
         );
 
         setTimeout(updateBoard, 80);
-      } else if (GRID_SIZE ** 2 - openCellsCount === MINES_AMOUNT) {
+      } else if (
+        boardStateRef.current.filter((cell) => !cell.isRevealed).length ===
+        MINES_AMOUNT
+      ) {
         winSound.play();
+
+        setTimeout(() => {
+          onWin();
+        }, 0);
       }
     };
 
@@ -121,37 +138,37 @@ const Board = () => {
   }, []);
 
   return (
-    <div className="board-container">
-      <Stage width={sideSize} height={sideSize} options={STAGE_OPTIONS}>
-        <PixiViewport
-          screenWidth={sideSize}
-          screenHeight={sideSize}
-          worldWidth={VIEW_BOX_SIDE}
-          worldHeight={VIEW_BOX_SIDE}
-        >
-          <Container position={[BORDER_PADDING, BORDER_PADDING]}>
-            <Rect
-              x={0}
-              y={0}
-              width={VIEW_BOX_SIDE - BORDER_PADDING * 2}
-              height={VIEW_BOX_SIDE - BORDER_PADDING * 2}
-              radius={20}
-              fill={0xffffff}
-              stroke={0x000000}
-              strokeWidth={BORDER_WIDTH}
-            />
-            <CellGroup
-              board={board}
-              onCellClick={handleCellClick}
-              isGameOver={isGameOver}
-              cellSize={CELL_SIZE}
-              cellBorderPadding={CELL_BORDER_PADDING}
-            />
-          </Container>
-        </PixiViewport>
-      </Stage>
-    </div>
+    <Stage width={sideSize} height={sideSize} options={STAGE_OPTIONS}>
+      <PixiViewport
+        screenWidth={sideSize}
+        screenHeight={sideSize}
+        worldWidth={VIEW_BOX_SIDE}
+        worldHeight={VIEW_BOX_SIDE}
+      >
+        <Container position={[BORDER_PADDING, BORDER_PADDING]}>
+          <Rect
+            x={0}
+            y={0}
+            width={VIEW_BOX_SIDE - BORDER_PADDING * 2}
+            height={VIEW_BOX_SIDE - BORDER_PADDING * 2}
+            radius={20}
+            fill={0xffffff}
+            stroke={0x000000}
+            strokeWidth={BORDER_WIDTH}
+          />
+          <CellGroup
+            board={board}
+            onCellClick={handleCellClick}
+            isGameOver={isGameOver}
+            cellSize={CELL_SIZE}
+            cellBorderPadding={CELL_BORDER_PADDING}
+          />
+        </Container>
+      </PixiViewport>
+    </Stage>
   );
-};
+});
+
+Board.displayName = 'Board';
 
 export default Board;
