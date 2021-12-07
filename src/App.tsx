@@ -7,6 +7,9 @@ export default function App() {
       <Link href="/minesweeper">
         <a className="text-center text-3xl">Mined yourself!</a>
       </Link>
+      <Link href="/balls-path">
+        <a className="text-center text-3xl">Lead the balls</a>
+      </Link>
     </div>
   );
 }

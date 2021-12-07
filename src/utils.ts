@@ -36,3 +36,6 @@ export const hasDiffBy = <T extends Record<string, any>>(
 
 export const randMinMax = (min: number, max: number): number =>
   Math.floor(Math.random() * (max - min) + min);
+
+export const toFixed = (num: number, amount: number): number =>
+  Number(num.toFixed(amount));
