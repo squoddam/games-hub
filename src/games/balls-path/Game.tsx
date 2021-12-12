@@ -1,52 +1,120 @@
-import { useEffect, useRef, useState } from 'react';
-import { Engine, Bodies, World, Runner } from 'matter-js';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import * as PIXI from 'pixi.js';
+import { EventSystem } from '@pixi/events';
 import { Container, Stage, useApp } from '@inlet/react-pixi';
-import PixiViewport from '@/components/PixiViewport';
 import Rect from '@/components/primitives/Rect';
 import { MatterProvider } from './MatterCtx';
-import Walls from './components/Walls';
-import { WORLD_SIZE } from './constants';
+import Walls, { MatterRect } from './components/Walls';
+import { COLLISION, WORLD_SIZE } from './constants';
 import Ball from './components/Ball';
+import { nanoid } from 'nanoid';
+import { ACTIONS, storeCtx, StoreProvider } from './storeCtx';
 
-type BallInfo = {
-  x: number;
-  y: number;
-  radius: number;
-};
+const MENU_SIZE = 100;
 
-const balls: BallInfo[] = [
-  {
-    x: 10,
-    y: 10,
-    radius: 10,
-  },
-];
+const Game = ({ sideSize }) => {
+  const { store, dispatch } = useContext(storeCtx);
 
-const Game = () => {
-  const pixiApp = useApp();
-  const [balls, setBalls] = useState<BallInfo[]>([]);
+  const { balls, obstacles } = store;
 
   const containerRef = useRef<PIXI.Container>(null);
 
-  useEffect(() => {
-    setBalls([{ x: 100, y: 100, radius: 30 }]);
+  const ballsLoop = useCallback(() => {
+    setInterval(() => {
+      const id = nanoid();
 
-    pixiApp.view.addEventListener('click', (...args) => {
-      console.log(args);
-    });
+      dispatch({
+        type: ACTIONS.ADD_BALL,
+        payload: { id, x: 100, y: 100, radius: 30 },
+      });
+    }, 1000);
   }, []);
 
+  useEffect(() => {
+    ballsLoop();
+
+    if (containerRef.current) {
+      containerRef.current.interactive = true;
+      containerRef.current.addListener('pointerdown', (event) => {
+        const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
+
+        const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
+        const y = getWorldCoords(event.data.global.y);
+
+        const obstacleId = nanoid();
+
+        dispatch({
+          type: ACTIONS.ADD_OBSTACLE,
+          payload: { id: obstacleId, x, y },
+        });
+      });
+    }
+  }, []);
+
+  const handleBallCollision = useCallback(
+    (
+      { idA: ballId, idB: otherId }: { idA: string; idB: string },
+      { bodyA: ballBody, bodyB: otherBody }: Matter.IPair
+    ) => {
+      if (otherBody.collisionFilter.category === COLLISION.CATEGORY.WALL) {
+        dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: ballId } });
+      }
+    },
+    []
+  );
+
   return (
-    <MatterProvider>
-      <Container ref={containerRef}>
-        <Walls />
-        {balls.map(({ x, y, radius }) => (
-          <Ball key={x + y} x={x} y={y} radius={radius} />
+    <Container name="game">
+      <Rect
+        x={0}
+        y={0}
+        width={WORLD_SIZE}
+        height={WORLD_SIZE}
+        radius={0}
+        fill={0xffffff}
+        stroke={0x000000}
+        strokeWidth={3}
+      />
+
+      <Container ref={containerRef} position={{ x: MENU_SIZE, y: 0 }}>
+        <Rect
+          x={0}
+          y={0}
+          width={WORLD_SIZE - MENU_SIZE}
+          height={WORLD_SIZE - MENU_SIZE}
+          radius={0}
+          fill={0xffffff}
+          stroke={0x000000}
+          strokeWidth={0}
+        />
+        <Walls wallSize={WORLD_SIZE - MENU_SIZE} />
+        {balls.map(({ id, x, y, radius }) => (
+          <Ball
+            key={id}
+            id={id}
+            x={x}
+            y={y}
+            radius={radius}
+            onCollision={handleBallCollision}
+          />
+        ))}
+        {obstacles.map(({ id, x, y }) => (
+          <MatterRect
+            id={id}
+            key={id}
+            x={x}
+            y={y}
+            width={200}
+            height={50}
+            options={{
+              isStatic: true,
+              collisionFilter: { category: COLLISION.CATEGORY.OBSTACLE },
+            }}
+          />
         ))}
       </Container>
-    </MatterProvider>
+    </Container>
   );
 };
 
@@ -72,8 +140,12 @@ const Board = ({ sideSize }) => {
 
   return (
     <Stage width={sideSize} height={sideSize} options={STAGE_OPTIONS}>
-      <Container ref={containerRef}>
-        <Game />
+      <Container ref={containerRef} name="board">
+        <StoreProvider>
+          <MatterProvider>
+            <Game sideSize={sideSize} />
+          </MatterProvider>
+        </StoreProvider>
       </Container>
     </Stage>
   );

@@ -1,21 +1,31 @@
-import Matter, { Engine, Runner, World } from 'matter-js';
+import Matter, { Composite, Engine, Events, Runner, World } from 'matter-js';
 import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as PIXI from 'pixi.js';
 import { Container, useApp } from '@inlet/react-pixi';
+import { UseMatterProps } from './types';
 
 const engine = Engine.create();
+engine.timing.timeScale = 0.5;
 
 type SceneObject = {
   id: string;
-  geometry: PIXI.Graphics;
   body: Matter.Body;
-  update: (body: Matter.Body, geometry: PIXI.Graphics) => void;
+  onUpdate: (body: Matter.Body) => void;
+  onClick?: () => void;
 };
 
-const sceneObjects: SceneObject[] = [];
+const sceneObjects: Record<string, SceneObject> = {};
 
-const MatterCtx = React.createContext<PIXI.Container | null>(null);
+export const MatterCtx = React.createContext<{
+  container: PIXI.Container | null;
+  setCollisionListener: (x: {
+    id: string;
+    body: Matter.Body;
+    listener: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
+  }) => void;
+  removeCollisionListener: (body: Matter.Body) => void;
+}>({});
 
 type MatterProviderProps = {
   children: React.ReactElement;
@@ -24,13 +34,56 @@ type MatterProviderProps = {
 export const MatterProvider = ({ children }: MatterProviderProps) => {
   const pixiApp = useApp();
 
-  useEffect(() => {
-    pixiApp.ticker.add(() => {
-      sceneObjects.forEach(({ body, geometry, update }) => {
-        update(body, geometry);
+  const collisionListeners = useRef(new Map());
+
+  const setCollisionListener = ({
+    id,
+    body,
+    listener,
+  }: {
+    id: string;
+    body: Matter.Body;
+    listener: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
+  }) => {
+    collisionListeners.current.set(body, { id, listener, body });
+
+    Events.on(engine, 'collisionStart', (event) => {
+      const { pairs } = event;
+      pairs.forEach((pair) => {
+        const { bodyA, bodyB } = pair;
+        const [configA, configB] = [
+          collisionListeners.current.get(bodyA),
+          collisionListeners.current.get(bodyB),
+        ];
+
+        configA?.listener(
+          {
+            idA: configA?.id,
+            idB: configB?.id,
+          },
+          pair
+        );
+
+        configB?.listener(
+          {
+            idA: configB?.id,
+            idB: configA?.id,
+          },
+          {
+            ...pair,
+            bodyA: bodyB,
+            bodyB: bodyA,
+          }
+        );
       });
     });
+  };
 
+  const removeCollisionListener = (body: Matter.Body) => {
+    collisionListeners.current.delete(body);
+  };
+
+  useEffect(() => {
     Runner.run(engine);
   }, [pixiApp]);
 
@@ -42,49 +95,89 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
       containerRef.current.interactive = true;
       setContainer(containerRef.current);
     }
-  }, [containerRef]);
+  }, []);
 
   return (
-    <Container ref={containerRef}>
-      <MatterCtx.Provider value={container}>{children}</MatterCtx.Provider>
+    <Container ref={containerRef} name="matter">
+      <MatterCtx.Provider
+        value={{ container, setCollisionListener, removeCollisionListener }}
+      >
+        {children}
+      </MatterCtx.Provider>
     </Container>
   );
-};
-
-type UseMatterProps = {
-  id: string;
-  getBody: () => Matter.Body;
-  getGeometry: () => PIXI.Graphics;
-  update: (body: Matter.Body, geometry: PIXI.Graphics) => void;
 };
 
 export const useMatter = ({
   id,
   getBody,
-  getGeometry,
-  update,
+  onUpdate,
+  onClick,
+  onCollision,
 }: UseMatterProps) => {
   const pixiApp = useApp();
   const body = useMemo(() => getBody(), [getBody]);
-  const geometry = useMemo(() => getGeometry(), [getGeometry]);
 
-  const container = useContext(MatterCtx);
+  const { container, setCollisionListener, removeCollisionListener } =
+    useContext(MatterCtx);
 
   useEffect(() => {
-    const existingObjIndex = sceneObjects.findIndex(
-      ({ id: objId }) => objId === id
-    );
-    if (existingObjIndex !== -1) {
-      sceneObjects[existingObjIndex] = { id, body, geometry, update };
+    const existingObj = sceneObjects[id];
+
+    if (existingObj) {
+      sceneObjects[id] = {
+        id,
+        body,
+        onUpdate,
+        onClick,
+      };
     } else {
       if (container) {
         World.addBody(engine.world, body);
-        container.addChild(geometry);
 
-        sceneObjects.push({ id, body, geometry, update });
+        sceneObjects[id] = { id, body, onUpdate, onClick };
+
+        if (onCollision) {
+          setCollisionListener({
+            id,
+            body,
+            listener: onCollision,
+          });
+
+          return () => {
+            removeCollisionListener(body);
+          };
+        }
       }
     }
-  }, [id, body, geometry, update, pixiApp, container]);
+  }, [id, body, onUpdate, onClick, pixiApp, container]);
+
+  useEffect(() => {
+    const onTickUpdate = () => {
+      const existingObj = sceneObjects[id];
+
+      if (existingObj) {
+        existingObj.onUpdate?.(existingObj.body);
+      }
+    };
+
+    pixiApp.ticker.add(onTickUpdate);
+
+    return () => {
+      const existingObj = sceneObjects[id];
+
+      if (existingObj) {
+        // existingObj.geometry.destroy();
+        Composite.remove(engine.world, existingObj.body);
+
+        // Events.off(mouseConstraint, 'mousedown', existingObj.onClick);
+
+        pixiApp.ticker.remove(onTickUpdate);
+
+        delete sceneObjects[id];
+      }
+    };
+  }, []);
 
   return null;
 };

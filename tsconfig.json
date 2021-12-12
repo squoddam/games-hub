@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
-      "@minesweeper/*": ["src/games/minesweeper/*"]
+      "@minesweeper/*": ["src/games/minesweeper/*"],
+      "@balls/*": ["src/games/balls-path/*"],
     },
     "esModuleInterop": true,
     "lib": ["dom", "es2019"],

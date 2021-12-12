@@ -1,13 +1,13 @@
 import * as PIXI from 'pixi.js';
 import { Bodies } from 'matter-js';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useMatter } from '../MatterCtx';
-import { WORLD_SIZE } from '../constants';
+import { COLLISION, WORLD_SIZE } from '../constants';
 import { toFixed } from '@/utils';
-import { nanoid } from 'nanoid';
+import { Graphics } from '@inlet/react-pixi';
 
-type RectMatterProps = {
-  id?: string;
+type MatterRectProps = {
+  id: string;
   x: number;
   y: number;
   width: number;
@@ -16,7 +16,7 @@ type RectMatterProps = {
   options: Matter.IChamferableBodyDefinition | undefined;
 };
 
-const RectMatter = ({
+export const MatterRect = ({
   id,
   x,
   y,
@@ -24,31 +24,19 @@ const RectMatter = ({
   height,
   fill = 0x000000,
   options,
-}: RectMatterProps) => {
-  const idMemoise = useMemo(() => id || nanoid(), [id]);
+}: MatterRectProps) => {
   const getBody = useCallback(
     () =>
       Bodies.rectangle(x + width / 2, y + height / 2, width, height, options),
     [x, y, width, height, options]
   );
 
-  const getGeometry = useCallback(() => {
-    const g = new PIXI.Graphics();
+  const geometryRef = useRef<PIXI.Graphics>(new PIXI.Graphics());
 
-    window.g = g;
-
-    return g
-      .clear()
-      .lineStyle(0)
-      .beginFill(fill)
-      .drawRect(x, y, width, height)
-      .endFill();
-  }, [x, y, width, height, fill]);
-
-  const update = useCallback(
-    (body, geometry: PIXI.Graphics) => {
-      geometry
-        .clear()
+  const onUpdate = useCallback(
+    (body) => {
+      geometryRef.current
+        ?.clear()
         .lineStyle(0)
         .beginFill(fill)
         .drawRect(
@@ -65,68 +53,84 @@ const RectMatter = ({
   );
 
   useMatter({
-    id: idMemoise,
+    id,
     getBody,
-    getGeometry,
-    update,
+    onUpdate,
   });
 
-  return null;
+  return <Graphics ref={geometryRef} />;
 };
 
 const WALL_THICKNESS = 10;
 
-const Walls = () => {
-  const walls = [
-    // TOP
-    {
-      id: 'top',
-      x: 0,
-      y: 0,
-      width: WORLD_SIZE,
-      height: WALL_THICKNESS,
-    },
+type WallsProps = {
+  wallSize: number;
+  wallThickness?: number;
+};
 
-    // BOTTOM
-    {
-      id: 'bottom',
-      x: 0,
-      y: WORLD_SIZE - WALL_THICKNESS,
-      width: WORLD_SIZE,
-      height: WALL_THICKNESS,
-    },
+const Walls = ({ wallSize, wallThickness = WALL_THICKNESS }: WallsProps) => {
+  const walls = useMemo(
+    () => [
+      // TOP
+      {
+        id: 'top',
+        x: 0,
+        y: 0,
+        width: wallSize,
+        height: wallThickness,
+      },
 
-    // LEFT
-    {
-      id: 'left',
-      x: 0,
-      y: 0,
-      width: WALL_THICKNESS,
-      height: WORLD_SIZE,
-    },
+      // BOTTOM
+      {
+        id: 'bottom',
+        x: 0,
+        y: wallSize - wallThickness,
+        width: wallSize,
+        height: wallThickness,
+      },
 
-    // RIGHT
-    {
-      id: 'right',
-      x: WORLD_SIZE - WALL_THICKNESS,
-      y: 0,
-      width: WALL_THICKNESS,
-      height: WORLD_SIZE,
-    },
-  ];
+      // LEFT
+      {
+        id: 'left',
+        x: 0,
+        y: 0,
+        width: wallThickness,
+        height: wallSize,
+      },
 
-  const options = useMemo(() => ({ isStatic: true }), []);
+      // RIGHT
+      {
+        id: 'right',
+        x: wallSize - wallThickness,
+        y: 0,
+        width: wallThickness,
+        height: wallSize,
+      },
+    ],
+    [wallSize, wallThickness]
+  );
+
+  const options = useMemo(
+    () => ({
+      collisionFilter: {
+        category: COLLISION.CATEGORY.WALL,
+        mask: COLLISION.CATEGORY.BALL,
+      },
+      isStatic: true,
+    }),
+    []
+  );
 
   return (
     <>
-      {walls.map(({ id, x, y, width, height, fill }) => (
-        <RectMatter
+      {walls.map(({ id, x, y, width, height }) => (
+        <MatterRect
           key={id}
+          id={id}
           x={x}
           y={y}
           width={width}
           height={height}
-          fill={fill}
           options={options}
         />
       ))}
