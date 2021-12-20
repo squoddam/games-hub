@@ -5,3 +5,10 @@ export type UseMatterProps = {
   onClick?: () => void;
   onCollision?: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
 };
+
+export type WaypointBase = {
+  id: string;
+  x: number;
+  y: number;
+  rotation?: number;
+};

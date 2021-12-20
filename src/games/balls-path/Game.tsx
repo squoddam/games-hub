@@ -1,41 +1,40 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef } from 'react';
 
 import * as PIXI from 'pixi.js';
-import { EventSystem } from '@pixi/events';
 import { Container, Stage, useApp } from '@inlet/react-pixi';
+import { nanoid } from 'nanoid';
+
 import Rect from '@/components/primitives/Rect';
 import { MatterProvider } from './MatterCtx';
-import Walls, { MatterRect } from './components/Walls';
+import Walls from './components/Walls';
 import { COLLISION, WORLD_SIZE } from './constants';
 import Ball from './components/Ball';
-import { nanoid } from 'nanoid';
-import { ACTIONS, storeCtx, StoreProvider } from './storeCtx';
+import { ACTIONS, GameStatus, storeCtx, StoreProvider } from './storeCtx';
+import { default as MatterRect } from './components/matterBodies/Rect';
+import Start from './components/waypoints/Start';
 
 const MENU_SIZE = 100;
 
 const Game = ({ sideSize }) => {
   const { store, dispatch } = useContext(storeCtx);
 
-  const { balls, obstacles } = store;
+  const { waypoints, balls, obstacles } = store;
 
   const containerRef = useRef<PIXI.Container>(null);
 
-  const ballsLoop = useCallback(() => {
-    setInterval(() => {
-      const id = nanoid();
-
-      dispatch({
-        type: ACTIONS.ADD_BALL,
-        payload: { id, x: 100, y: 100, radius: 30 },
-      });
-    }, 1000);
-  }, []);
-
   useEffect(() => {
-    ballsLoop();
-
     if (containerRef.current) {
       containerRef.current.interactive = true;
+      containerRef.current.addListener('pointermove', (event) => {
+        const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
+        const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
+        const y = getWorldCoords(event.data.global.y);
+
+        dispatch({
+          type: ACTIONS.SET_MOUSE_POSITION,
+          payload: { mousePos: { x, y } },
+        });
+      });
       containerRef.current.addListener('pointerdown', (event) => {
         const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
 
@@ -50,12 +49,22 @@ const Game = ({ sideSize }) => {
         });
       });
     }
+
+    dispatch({
+      type: ACTIONS.SET_WAYPOINTS,
+      payload: {
+        waypoints: {
+          start: { id: nanoid(), x: 500, y: 500, rotation: Math.PI / 2 },
+          end: { id: nanoid(), x: 200, y: 200 },
+        },
+      },
+    });
   }, []);
 
   const handleBallCollision = useCallback(
     (
-      { idA: ballId, idB: otherId }: { idA: string; idB: string },
-      { bodyA: ballBody, bodyB: otherBody }: Matter.IPair
+      { idA: ballId }: { idA: string; idB: string },
+      { bodyB: otherBody }: Matter.IPair
     ) => {
       if (otherBody.collisionFilter.category === COLLISION.CATEGORY.WALL) {
         dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: ballId } });
@@ -89,12 +98,13 @@ const Game = ({ sideSize }) => {
           strokeWidth={0}
         />
         <Walls wallSize={WORLD_SIZE - MENU_SIZE} />
-        {balls.map(({ id, x, y, radius }) => (
+        {balls.map(({ id, x, y, radius, force }) => (
           <Ball
             key={id}
             id={id}
             x={x}
             y={y}
+            force={force}
             radius={radius}
             onCollision={handleBallCollision}
           />
@@ -113,6 +123,8 @@ const Game = ({ sideSize }) => {
             }}
           />
         ))}
+
+        {waypoints.start && <Start {...waypoints.start} />}
       </Container>
     </Container>
   );

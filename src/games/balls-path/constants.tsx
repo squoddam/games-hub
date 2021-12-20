@@ -5,5 +5,7 @@ export const COLLISION = {
     WALL: 0x0001,
     BALL: 0x0002,
     OBSTACLE: 0x0004,
-  }
-}
+  },
+};
+
+export const BALL_SIZE = 30;

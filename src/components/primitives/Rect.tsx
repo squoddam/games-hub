@@ -1,4 +1,5 @@
 import { Graphics as PixiGraphics } from 'pixi.js';
+import { forwardRef } from 'react';
 import Shape, { ShapeProps } from './Shape';
 
 type RectProps = {
@@ -15,6 +16,10 @@ const renderFn = (g: PixiGraphics, props: RectProps) => {
   g.drawRoundedRect(x, y, width, height, radius);
 };
 
-const PixiRect = (props: RectProps) => <Shape {...props} renderFn={renderFn} />;
+const Rect = forwardRef((props: RectProps, ref) => (
+  <Shape ref={ref} {...props} renderFn={renderFn} />
+));
 
-export default PixiRect;
+Rect.displayName = 'Rect';
+
+export default Rect;

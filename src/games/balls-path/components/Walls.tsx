@@ -1,65 +1,6 @@
-import * as PIXI from 'pixi.js';
-import { Bodies } from 'matter-js';
-import { useCallback, useMemo, useRef } from 'react';
-import { useMatter } from '../MatterCtx';
-import { COLLISION, WORLD_SIZE } from '../constants';
-import { toFixed } from '@/utils';
-import { Graphics } from '@inlet/react-pixi';
-
-type MatterRectProps = {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  fill?: number;
-  options: Matter.IChamferableBodyDefinition | undefined;
-};
-
-export const MatterRect = ({
-  id,
-  x,
-  y,
-  width,
-  height,
-  fill = 0x000000,
-  options,
-}: MatterRectProps) => {
-  const getBody = useCallback(
-    () =>
-      Bodies.rectangle(x + width / 2, y + height / 2, width, height, options),
-    [x, y, width, height, options]
-  );
-
-  const geometryRef = useRef<PIXI.Graphics>(new PIXI.Graphics());
-
-  const onUpdate = useCallback(
-    (body) => {
-      geometryRef.current
-        ?.clear()
-        .lineStyle(0)
-        .beginFill(fill)
-        .drawRect(
-          toFixed(body.position.x, 2) -
-            (toFixed(body.bounds.max.x, 2) - toFixed(body.bounds.min.x, 2)) / 2,
-          toFixed(body.position.y, 2) -
-            (toFixed(body.bounds.max.y, 2) - toFixed(body.bounds.min.y, 2)) / 2,
-          width,
-          height
-        )
-        .endFill();
-    },
-    [width, height, fill]
-  );
-
-  useMatter({
-    id,
-    getBody,
-    onUpdate,
-  });
-
-  return <Graphics ref={geometryRef} />;
-};
+import { useMemo } from 'react';
+import { COLLISION } from '../constants';
+import Rect from './matterBodies/Rect';
 
 const WALL_THICKNESS = 10;
 
@@ -124,7 +65,7 @@ const Walls = ({ wallSize, wallThickness = WALL_THICKNESS }: WallsProps) => {
   return (
     <>
       {walls.map(({ id, x, y, width, height }) => (
-        <MatterRect
+        <Rect
           key={id}
           id={id}
           x={x}

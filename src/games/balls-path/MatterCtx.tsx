@@ -100,7 +100,11 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
   return (
     <Container ref={containerRef} name="matter">
       <MatterCtx.Provider
-        value={{ container, setCollisionListener, removeCollisionListener }}
+        value={{
+          container,
+          setCollisionListener,
+          removeCollisionListener,
+        }}
       >
         {children}
       </MatterCtx.Provider>
