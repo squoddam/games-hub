@@ -27,7 +27,7 @@ type Store = {
   gameStatus: GameStatus;
   waypoints: {
     start: WaypointBase | null;
-    end: WaypointBase | null;
+    finish: WaypointBase | null;
   };
   balls: BallInfo[];
   obstacles: ObstacleInfo[];
@@ -45,7 +45,7 @@ const initialStore: Store = {
   gameStatus: GameStatus.PAUSED,
   waypoints: {
     start: null,
-    end: null,
+    finish: null,
   },
   balls: [],
   obstacles: [],
@@ -77,9 +77,9 @@ const actionHandlers: Record<string, StoreReducer> = {
     ...store,
     mousePos,
   }),
-  [ACTIONS.SET_GAME_STATUS]: (store, { payload: { status } }) => ({
+  [ACTIONS.SET_GAME_STATUS]: (store, { payload: { gameStatus } }) => ({
     ...store,
-    gameStatus: status,
+    gameStatus,
   }),
   [ACTIONS.SET_WAYPOINTS]: (store, { payload: { waypoints } }) => ({
     ...store,

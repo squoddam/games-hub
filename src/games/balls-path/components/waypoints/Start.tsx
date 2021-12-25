@@ -5,8 +5,8 @@ import { nanoid } from 'nanoid';
 
 import { useAnime } from '@/hooks';
 
-import Rect from '@/components/primitives/Rect';
-import Circle from '@/components/primitives/Circle';
+import RectGraphics from '@/components/primitives/RectGraphics';
+import CircleGraphics from '@/components/primitives/CircleGraphics';
 import { ShapeRefType } from '@/components/primitives/Shape';
 
 import { WaypointBase } from '@balls/types';
@@ -88,7 +88,7 @@ const Cannon = ({ toFire }: { toFire: boolean }) => {
 
   return (
     <Container>
-      <Circle
+      <CircleGraphics
         x={0}
         y={0}
         radius={BALL_SIZE}
@@ -96,20 +96,20 @@ const Cannon = ({ toFire }: { toFire: boolean }) => {
         endAngle={Math.PI}
         anticlockwise
       />
-      <Rect
+      <RectGraphics
         x={-BALL_SIZE}
         y={0}
         width={BALL_SIZE * 2}
         height={BALL_SIZE - CANNON_MARGIN}
       />
-      <Rect
+      <RectGraphics
         ref={barrel2Ref}
         x={-BALL_SIZE}
         y={BALL_SIZE}
         width={BALL_SIZE * 2}
         height={BALL_SIZE}
       />
-      <Rect
+      <RectGraphics
         ref={muzzleRef}
         x={-CANNON_MARGIN - BALL_SIZE}
         y={BALL_SIZE * 2 + CANNON_MARGIN}
@@ -154,7 +154,7 @@ const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
   return (
     <Container x={x} y={y} rotation={rotation}>
       <Cannon toFire={gameStatus === GameStatus.RUNNING} />
-      <Circle
+      <CircleGraphics
         id={'center'}
         x={0}
         y={0}

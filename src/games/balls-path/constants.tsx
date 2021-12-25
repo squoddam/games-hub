@@ -2,9 +2,10 @@ export const WORLD_SIZE = 1000;
 
 export const COLLISION = {
   CATEGORY: {
-    WALL: 0x0001,
-    BALL: 0x0002,
-    OBSTACLE: 0x0004,
+    WALL: 0x0002,
+    BALL: 0x0004,
+    OBSTACLE: 0x0008,
+    BIN: 0x0016,
   },
 };
 

@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
+
 import { randMinMax } from '@/utils';
+
 import { COLLISION } from '../constants';
-import Circle, { CircleProps } from './matterBodies/Circle';
+import { CircleBodyProps } from './matterBodies/CircleBody';
+import Circle from './Circle';
 
 type BallProps = { force?: Matter.Vector } & Omit<
-  CircleProps,
+  CircleBodyProps,
   'options' | 'fill'
 >;
 

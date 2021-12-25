@@ -12,10 +12,9 @@ import produce from 'immer';
 import { Howl } from 'howler';
 import { settings, SCALE_MODES } from 'pixi.js';
 
-import { useWindowResize } from '@/hooks';
 import { Vector2 } from '@/types';
 import PixiViewport from '@/components/PixiViewport';
-import Rect from '@/components/primitives/Rect';
+import RectGraphics from '@/components/primitives/RectGraphics';
 
 import { clearSpaceGen, createBoardArr, gridToIndex } from './utils';
 import { BoardCell } from './types';
@@ -146,7 +145,7 @@ const Board = forwardRef(({ sideSize, onWin, onLose }: BoardProps, ref) => {
         worldHeight={VIEW_BOX_SIDE}
       >
         <Container position={[BORDER_PADDING, BORDER_PADDING]}>
-          <Rect
+          <RectGraphics
             x={0}
             y={0}
             width={VIEW_BOX_SIDE - BORDER_PADDING * 2}

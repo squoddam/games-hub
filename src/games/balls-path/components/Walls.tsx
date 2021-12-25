@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { COLLISION } from '../constants';
-import Rect from './matterBodies/Rect';
+import Rect from './Rect';
 
 const WALL_THICKNESS = 10;
 

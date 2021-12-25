@@ -1,11 +1,11 @@
 import { memo, useMemo, useRef } from 'react';
 import { Vector2 } from '@/types';
 
-import Rect from '@/components/primitives/Rect';
+import RectGraphics from '@/components/primitives/RectGraphics';
 import { Container, Text } from '@inlet/react-pixi';
 import { TextStyle, Text as PixiText } from '@pixi/text';
 import { useAnime } from '@/hooks';
-import Circle from '@/components/primitives/Circle';
+import CircleGraphics from '@/components/primitives/CircleGraphics';
 import { getKey } from '@minesweeper/utils';
 
 const minesCountsColors = [
@@ -80,7 +80,7 @@ const Cell = ({
   return (
     <Container>
       {isRevealed && isMine && (
-        <Circle
+        <CircleGraphics
           x={left + cellSize / 2}
           y={top + cellSize / 2}
           radius={cellSize / 2 - padding * 2}
@@ -97,7 +97,7 @@ const Cell = ({
           style={getTextStyle(24, minesCountsColors[nearbyMinesCount - 1])}
         />
       )}
-      <Rect
+      <RectGraphics
         coordsKey={getKey(coords)}
         {...to}
         radius={20}

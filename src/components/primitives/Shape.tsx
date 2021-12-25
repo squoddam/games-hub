@@ -1,7 +1,6 @@
 import { Graphics } from '@inlet/react-pixi';
-import { Graphics as PixiGraphics } from 'pixi.js';
-import { ForwardedRef, forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import anime from 'animejs';
+import { Graphics as PixiGraphics, ObservablePoint } from 'pixi.js';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 type OnClickType = () => void;
 
@@ -18,7 +17,7 @@ export type ShapeProps = {
 
 export type ShapeRefType = {
   draw: (nextProps: Partial<ShapeProps>) => void;
-}
+};
 
 const decorateRender =
   (renderFn: RenderFnType): RenderFnType =>
@@ -39,51 +38,49 @@ const decorateRender =
     g.endFill();
   };
 
-const Shape = forwardRef(
-  ({ onClick, renderFn, ...props }: ShapeProps, ref) => {
-    const gRef = useRef<PixiGraphics | null>(null);
+const Shape = forwardRef(({ onClick, renderFn, ...props }: ShapeProps, ref) => {
+  const gRef = useRef<PixiGraphics | null>(null);
 
-    const draw = (nextProps: Partial<ShapeProps>) => {
-      if (gRef.current) {
-        decorateRender(renderFn)(gRef.current, { ...props, ...nextProps });
+  const draw = (nextProps: Partial<ShapeProps>) => {
+    if (gRef.current) {
+      decorateRender(renderFn)(gRef.current, { ...props, ...nextProps });
+    }
+  };
+
+  useImperativeHandle(ref, () => ({
+    draw,
+  }));
+
+  useEffect(() => {
+    draw(props);
+  }, [props]);
+
+  const onClickRef = useRef<OnClickType | null>(null);
+
+  useEffect(() => {
+    if (onClick && onClickRef.current !== onClick) {
+      const g = gRef.current;
+
+      if (!g) {
+        return;
       }
-    };
 
-    useImperativeHandle(ref, () => ({
-      draw,
-    }));
-
-    useEffect(() => {
-      draw(props);
-    }, [props]);
-
-    const onClickRef = useRef<OnClickType | null>(null);
-
-    useEffect(() => {
-      if (onClick && onClickRef.current !== onClick) {
-        const g = gRef.current;
-
-        if (!g) {
-          return;
-        }
-
-        if (!g.interactive) {
-          g.interactive = true;
-        }
-
-        if (onClickRef.current) {
-          g.removeListener('pointerdown', onClickRef.current);
-        }
-
-        g.addListener('pointerdown', onClick);
-
-        onClickRef.current = onClick;
+      if (!g.interactive) {
+        g.interactive = true;
       }
-    }, [onClick]);
 
-    return <Graphics ref={gRef} />;
-  }
-);
+      if (onClickRef.current) {
+        g.removeListener('pointerdown', onClickRef.current);
+      }
+
+      g.addListener('pointerdown', onClick);
+
+      onClickRef.current = onClick;
+    }
+  }, [onClick]);
+
+  return <Graphics ref={gRef} />;
+});
 
 Shape.displayName = 'Shape';
 

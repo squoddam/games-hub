@@ -2,7 +2,7 @@ import { Graphics } from '@pixi/graphics';
 import { forwardRef } from 'react';
 import Shape, { ShapeProps } from './Shape';
 
-type CircleProps = {
+export type CircleGraphicsProps = {
   x: number;
   y: number;
   radius: number;
@@ -11,7 +11,7 @@ type CircleProps = {
   anticlockwise?: boolean;
 } & Omit<ShapeProps, 'renderFn'>;
 
-const renderFn = (g: Graphics, props: CircleProps) => {
+const renderFn = (g: Graphics, props: CircleGraphicsProps) => {
   const { x, y, radius, startAngle, endAngle, anticlockwise } = props;
 
   if (startAngle !== undefined && endAngle !== undefined) {
@@ -21,10 +21,10 @@ const renderFn = (g: Graphics, props: CircleProps) => {
   }
 };
 
-const Circle = forwardRef((props: CircleProps, ref) => (
+const CircleGraphics = forwardRef((props: CircleGraphicsProps, ref) => (
   <Shape ref={ref} {...props} renderFn={renderFn} />
 ));
 
-Circle.displayName = 'Circle';
+CircleGraphics.displayName = 'Circle';
 
-export default Circle;
+export default CircleGraphics;

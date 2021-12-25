@@ -8,15 +8,6 @@ import { UseMatterProps } from './types';
 const engine = Engine.create();
 engine.timing.timeScale = 0.5;
 
-type SceneObject = {
-  id: string;
-  body: Matter.Body;
-  onUpdate: (body: Matter.Body) => void;
-  onClick?: () => void;
-};
-
-const sceneObjects: Record<string, SceneObject> = {};
-
 export const MatterCtx = React.createContext<{
   container: PIXI.Container | null;
   setCollisionListener: (x: {
@@ -101,7 +92,7 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
     <Container ref={containerRef} name="matter">
       <MatterCtx.Provider
         value={{
-          container,
+          container, // TODO: remove this
           setCollisionListener,
           removeCollisionListener,
         }}
@@ -112,76 +103,38 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
   );
 };
 
-export const useMatter = ({
-  id,
-  getBody,
-  onUpdate,
-  onClick,
-  onCollision,
-}: UseMatterProps) => {
+export const useMatter = ({ id, body, onCollision }: UseMatterProps) => {
   const pixiApp = useApp();
-  const body = useMemo(() => getBody(), [getBody]);
 
-  const { container, setCollisionListener, removeCollisionListener } =
+  const { setCollisionListener, removeCollisionListener } =
     useContext(MatterCtx);
 
   useEffect(() => {
-    const existingObj = sceneObjects[id];
+    World.addBody(engine.world, body);
 
-    if (existingObj) {
-      sceneObjects[id] = {
+    if (onCollision) {
+      setCollisionListener({
         id,
         body,
-        onUpdate,
-        onClick,
-      };
-    } else {
-      if (container) {
-        World.addBody(engine.world, body);
-
-        sceneObjects[id] = { id, body, onUpdate, onClick };
-
-        if (onCollision) {
-          setCollisionListener({
-            id,
-            body,
-            listener: onCollision,
-          });
-
-          return () => {
-            removeCollisionListener(body);
-          };
-        }
-      }
+        listener: onCollision,
+      });
     }
-  }, [id, body, onUpdate, onClick, pixiApp, container]);
-
-  useEffect(() => {
-    const onTickUpdate = () => {
-      const existingObj = sceneObjects[id];
-
-      if (existingObj) {
-        existingObj.onUpdate?.(existingObj.body);
-      }
-    };
-
-    pixiApp.ticker.add(onTickUpdate);
 
     return () => {
-      const existingObj = sceneObjects[id];
-
-      if (existingObj) {
-        // existingObj.geometry.destroy();
-        Composite.remove(engine.world, existingObj.body);
-
-        // Events.off(mouseConstraint, 'mousedown', existingObj.onClick);
-
-        pixiApp.ticker.remove(onTickUpdate);
-
-        delete sceneObjects[id];
+      if (onCollision) {
+        removeCollisionListener(body);
       }
+
+      World.remove(engine.world, body);
     };
-  }, []);
+  }, [
+    id,
+    body,
+    onCollision,
+    pixiApp,
+    setCollisionListener,
+    removeCollisionListener,
+  ]);
 
   return null;
 };

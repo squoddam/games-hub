@@ -1,8 +1,6 @@
 export type UseMatterProps = {
   id: string;
-  getBody: () => Matter.Body;
-  onUpdate: (body: Matter.Body) => void;
-  onClick?: () => void;
+  body: Matter.Body;
   onCollision?: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
 };
 
