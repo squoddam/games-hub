@@ -1,5 +1,5 @@
 import React, { Reducer, useReducer } from 'react';
-import { WaypointBase } from './types';
+import { ObstacleType, WaypointBase } from './types';
 
 type BallInfo = {
   id: string;
@@ -7,13 +7,6 @@ type BallInfo = {
   y: number;
   radius: number;
   force?: Matter.Vector;
-};
-
-type ObstacleInfo = {
-  id: string;
-  x: number;
-  y: number;
-  rotation: number;
 };
 
 export enum GameStatus {
@@ -30,7 +23,8 @@ type Store = {
     finish: WaypointBase | null;
   };
   balls: BallInfo[];
-  obstacles: ObstacleInfo[];
+  obstacles: ObstacleType[];
+  selectedObstacleId: string | null;
 };
 
 type StoreAction = {
@@ -49,6 +43,7 @@ const initialStore: Store = {
   },
   balls: [],
   obstacles: [],
+  selectedObstacleId: null,
 };
 
 type StoreCtxType = {
@@ -66,6 +61,9 @@ export const ACTIONS = {
   SET_WAYPOINTS: 'SET_WAYPOINTS',
   ADD_BALL: 'ADD_BALL',
   REMOVE_BALL: 'REMOVE_BALL',
+
+  SET_SELECTED_OBSTACLE: 'SET_SELECTED_OBSTACLE',
+  SET_OBSTACLE_ROTATION: 'SET_OBSTACLE_ROTATION',
   ADD_OBSTACLE: 'ADD_OBSTACLE',
   REMOVE_OBSTACLE: 'REMOVE_OBSTACLE',
 
@@ -100,6 +98,19 @@ const actionHandlers: Record<string, StoreReducer> = {
   [ACTIONS.REMOVE_OBSTACLE]: (store, { payload: { id } }) => ({
     ...store,
     obstacles: store.obstacles.filter((obstacle) => obstacle.id !== id),
+  }),
+  [ACTIONS.SET_SELECTED_OBSTACLE]: (
+    store,
+    { payload: { selectedObstacleId } }
+  ) => ({
+    ...store,
+    selectedObstacleId,
+  }),
+  [ACTIONS.SET_OBSTACLE_ROTATION]: (store, { payload: { id, rotation } }) => ({
+    ...store,
+    obstacles: store.obstacles.map((obstacle) =>
+      obstacle.id === id ? { ...obstacle, rotation } : obstacle
+    ),
   }),
 };
 

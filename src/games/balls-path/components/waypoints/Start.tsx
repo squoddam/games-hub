@@ -14,7 +14,7 @@ import { BALL_SIZE } from '@balls/constants';
 import { ACTIONS, GameStatus, storeCtx } from '@balls/storeCtx';
 
 const CANNON_MARGIN = 8;
-const FORCE = 0.3;
+const FORCE = 0.1;
 
 const ANIM_DURATION = 1;
 

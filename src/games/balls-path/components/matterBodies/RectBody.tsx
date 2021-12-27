@@ -4,7 +4,6 @@ import { useMatter } from '@balls/MatterCtx';
 import { UseMatterProps } from '@balls/types';
 
 export type RectBodyProps = {
-  id: string;
   x: number;
   y: number;
   width: number;
@@ -14,7 +13,7 @@ export type RectBodyProps = {
 };
 
 const RectBody = forwardRef(
-  ({ id, x, y, width, height, options, onCollision }: RectBodyProps, ref) => {
+  ({ x, y, width, height, options, onCollision }: RectBodyProps, ref) => {
     const body = useMemo<Body>(
       () =>
         Bodies.rectangle(x + width / 2, y + height / 2, width, height, options),
@@ -25,11 +24,10 @@ const RectBody = forwardRef(
 
     const matterConfig = useMemo(
       () => ({
-        id,
         body,
         onCollision,
       }),
-      [body, onCollision, id]
+      [body, onCollision]
     );
 
     useMatter(matterConfig);

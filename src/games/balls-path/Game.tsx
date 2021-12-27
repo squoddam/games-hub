@@ -7,34 +7,24 @@ import { nanoid } from 'nanoid';
 import RectGraphics from '@/components/primitives/RectGraphics';
 import { MatterProvider } from './MatterCtx';
 import Walls from './components/Walls';
-import { COLLISION, WORLD_SIZE } from './constants';
+import { COLLISION, MENU_SIZE, WORLD_SIZE } from './constants';
 import Ball from './components/Ball';
 import { ACTIONS, GameStatus, storeCtx, StoreProvider } from './storeCtx';
 import Start from './components/waypoints/Start';
 import Finish from './components/waypoints/Finish';
-
-const MENU_SIZE = 100;
+import Obstacle from './components/Obstacle';
 
 const Game = ({ sideSize }) => {
   const { store, dispatch } = useContext(storeCtx);
 
-  const { waypoints, balls, obstacles } = store;
+  const { waypoints, balls, obstacles, selectedObstacleId } = store;
 
   const containerRef = useRef<PIXI.Container>(null);
 
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.interactive = true;
-      // containerRef.current.addListener('pointermove', (event) => {
-      //   const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
-      //   const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
-      //   const y = getWorldCoords(event.data.global.y);
 
-      //   dispatch({
-      //     type: ACTIONS.SET_MOUSE_POSITION,
-      //     payload: { mousePos: { x, y } },
-      //   });
-      // });
       containerRef.current.addListener(
         'pointerdown',
         (event) => {
@@ -45,9 +35,14 @@ const Game = ({ sideSize }) => {
 
           const obstacleId = nanoid();
 
+          // dispatch({
+          //   type: ACTIONS.ADD_OBSTACLE,
+          //   payload: { id: obstacleId, x, y, rotation: Math.PI / 20 },
+          // });
+
           dispatch({
-            type: ACTIONS.ADD_OBSTACLE,
-            payload: { id: obstacleId, x, y },
+            type: ACTIONS.SET_SELECTED_OBSTACLE,
+            payload: { selectedObstacleId: null },
           });
         },
         0
@@ -59,10 +54,38 @@ const Game = ({ sideSize }) => {
       payload: {
         waypoints: {
           start: { id: nanoid(), x: 500, y: 100 },
-          end: { id: nanoid(), x: 500, y: 600 },
+          finish: { id: nanoid(), x: 500, y: 600 },
         },
       },
     });
+
+    const obstacleId = nanoid();
+    dispatch({
+      type: ACTIONS.ADD_OBSTACLE,
+      payload: {
+        id: obstacleId,
+        x: 470,
+        y: 500,
+        rotation: 0,
+      },
+    });
+
+    dispatch({
+      type: ACTIONS.SET_GAME_STATUS,
+      payload: { gameStatus: GameStatus.RUNNING },
+    });
+
+    setInterval(() => {
+      dispatch({
+        type: ACTIONS.SET_GAME_STATUS,
+        payload: { gameStatus: GameStatus.FINISHED },
+      });
+
+      dispatch({
+        type: ACTIONS.SET_GAME_STATUS,
+        payload: { gameStatus: GameStatus.RUNNING },
+      });
+    }, 5000);
   }, []);
 
   const handleBallCollision = useCallback(
@@ -113,20 +136,17 @@ const Game = ({ sideSize }) => {
             onCollision={handleBallCollision}
           />
         ))}
-        {/* {obstacles.map(({ id, x, y }) => (
-          <MatterRect
-            id={id}
+        {obstacles.map(({ id, x, y, rotation }) => (
+          <Obstacle
+            sideSize={sideSize}
             key={id}
+            id={id}
             x={x}
             y={y}
-            width={200}
-            height={50}
-            options={{
-              isStatic: true,
-              collisionFilter: { category: COLLISION.CATEGORY.OBSTACLE },
-            }}
+            rotation={rotation}
+            isSelected={selectedObstacleId === id}
           />
-        ))} */}
+        ))}
 
         {waypoints.start && <Start {...waypoints.start} />}
         {waypoints.finish && <Finish {...waypoints.finish} />}

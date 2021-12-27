@@ -1,10 +1,10 @@
 import { Bodies, Body } from 'matter-js';
-import { forwardRef, useImperativeHandle, useMemo } from 'react';
+import { forwardRef, memo, useImperativeHandle, useMemo } from 'react';
 import { useMatter } from '@balls/MatterCtx';
 import { UseMatterProps } from '@balls/types';
 
 export type CircleBodyProps = {
-  id: string;
+  id?: string;
   x: number;
   y: number;
   radius: number;
@@ -38,4 +38,4 @@ const CircleBody = forwardRef(
 
 CircleBody.displayName = 'CircleBody';
 
-export default CircleBody;
+export default memo(CircleBody);

@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, memo, useImperativeHandle, useRef } from 'react';
 import { Body } from 'matter-js';
 import { useTick } from '@inlet/react-pixi';
 
@@ -45,7 +45,13 @@ const Circle = forwardRef(
           options={options}
           onCollision={onCollision}
         />
-        <CircleGraphics ref={graphicsRef} x={x} y={y} radius={radius} fill={fill} />
+        <CircleGraphics
+          ref={graphicsRef}
+          x={x}
+          y={y}
+          radius={radius}
+          fill={fill}
+        />
       </>
     );
   }
@@ -53,4 +59,4 @@ const Circle = forwardRef(
 
 Circle.displayName = 'Circle';
 
-export default Circle;
+export default memo(Circle);

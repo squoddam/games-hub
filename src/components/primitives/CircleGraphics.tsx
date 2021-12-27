@@ -1,5 +1,5 @@
 import { Graphics } from '@pixi/graphics';
-import { forwardRef } from 'react';
+import { forwardRef, memo } from 'react';
 import Shape, { ShapeProps } from './Shape';
 
 export type CircleGraphicsProps = {
@@ -27,4 +27,4 @@ const CircleGraphics = forwardRef((props: CircleGraphicsProps, ref) => (
 
 CircleGraphics.displayName = 'Circle';
 
-export default CircleGraphics;
+export default memo(CircleGraphics);

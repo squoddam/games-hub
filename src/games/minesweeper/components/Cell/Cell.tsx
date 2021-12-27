@@ -6,7 +6,6 @@ import { Container, Text } from '@inlet/react-pixi';
 import { TextStyle, Text as PixiText } from '@pixi/text';
 import { useAnime } from '@/hooks';
 import CircleGraphics from '@/components/primitives/CircleGraphics';
-import { getKey } from '@minesweeper/utils';
 
 const minesCountsColors = [
   0x01579b, 0x019b62, 0xa2c80b, 0xf2b918, 0xf26818, 0xa73e01, 0xa70101,
@@ -98,7 +97,6 @@ const Cell = ({
         />
       )}
       <RectGraphics
-        coordsKey={getKey(coords)}
         {...to}
         radius={20}
         onClick={handleClick}

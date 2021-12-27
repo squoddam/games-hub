@@ -67,7 +67,6 @@ const Walls = ({ wallSize, wallThickness = WALL_THICKNESS }: WallsProps) => {
       {walls.map(({ id, x, y, width, height }) => (
         <Rect
           key={id}
-          id={id}
           x={x}
           y={y}
           width={width}

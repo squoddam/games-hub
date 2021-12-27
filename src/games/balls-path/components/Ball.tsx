@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 
 import { randMinMax } from '@/utils';
 
@@ -25,7 +25,7 @@ const Ball = ({ id, x, y, radius, force, onCollision }: BallProps) => {
           COLLISION.CATEGORY.OBSTACLE |
           COLLISION.CATEGORY.BALL,
       },
-      restitution: 1.1,
+      restitution: 1,
       ...(force && { force }),
     }),
     []
@@ -46,4 +46,4 @@ const Ball = ({ id, x, y, radius, force, onCollision }: BallProps) => {
   );
 };
 
-export default Ball;
+export default memo(Ball);

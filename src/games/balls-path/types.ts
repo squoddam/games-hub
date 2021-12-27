@@ -1,5 +1,5 @@
 export type UseMatterProps = {
-  id: string;
+  id?: string;
   body: Matter.Body;
   onCollision?: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
 };
@@ -9,4 +9,11 @@ export type WaypointBase = {
   x: number;
   y: number;
   rotation?: number;
+};
+
+export type ObstacleType = {
+  id: string;
+  x: number;
+  y: number;
+  rotation: number;
 };

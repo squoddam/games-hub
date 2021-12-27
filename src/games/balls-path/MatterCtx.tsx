@@ -4,9 +4,10 @@ import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as PIXI from 'pixi.js';
 import { Container, useApp } from '@inlet/react-pixi';
 import { UseMatterProps } from './types';
+import { nanoid } from 'nanoid';
 
 const engine = Engine.create();
-engine.timing.timeScale = 0.5;
+engine.timing.timeScale = 0.2;
 
 export const MatterCtx = React.createContext<{
   container: PIXI.Container | null;
@@ -105,6 +106,7 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
 
 export const useMatter = ({ id, body, onCollision }: UseMatterProps) => {
   const pixiApp = useApp();
+  const bodyId = useMemo(() => id || nanoid(), [id]);
 
   const { setCollisionListener, removeCollisionListener } =
     useContext(MatterCtx);
@@ -114,7 +116,7 @@ export const useMatter = ({ id, body, onCollision }: UseMatterProps) => {
 
     if (onCollision) {
       setCollisionListener({
-        id,
+        id: bodyId,
         body,
         listener: onCollision,
       });
@@ -128,7 +130,7 @@ export const useMatter = ({ id, body, onCollision }: UseMatterProps) => {
       World.remove(engine.world, body);
     };
   }, [
-    id,
+    bodyId,
     body,
     onCollision,
     pixiApp,

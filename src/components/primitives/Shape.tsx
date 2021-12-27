@@ -1,5 +1,5 @@
 import { Graphics } from '@inlet/react-pixi';
-import { Graphics as PixiGraphics, ObservablePoint } from 'pixi.js';
+import { Graphics as PixiGraphics } from 'pixi.js';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 type OnClickType = () => void;
@@ -8,10 +8,10 @@ type RenderFnType = (g: PixiGraphics, props: any) => void;
 
 export type ShapeProps = {
   onClick?: OnClickType;
-  coordsKey?: string;
   stroke?: number;
   strokeWidth?: number;
   fill?: number;
+  fillAlpha?: number;
   renderFn: RenderFnType;
 } & { [key: string]: any };
 
@@ -22,7 +22,13 @@ export type ShapeRefType = {
 const decorateRender =
   (renderFn: RenderFnType): RenderFnType =>
   (g, props) => {
-    const { stroke, strokeWidth = 1, fill = 0x000000 } = props;
+    const {
+      stroke,
+      fillAlpha = 1,
+      strokeWidth = 1,
+      fill = 0x000000,
+      filters,
+    } = props;
     g.clear();
 
     if (stroke !== undefined) {
@@ -31,11 +37,15 @@ const decorateRender =
       g.lineStyle(0);
     }
 
-    g.beginFill(fill);
+    g.beginFill(fill, fillAlpha);
 
     renderFn(g, props);
 
     g.endFill();
+
+    if (filters) {
+      g.filters = filters;
+    }
   };
 
 const Shape = forwardRef(({ onClick, renderFn, ...props }: ShapeProps, ref) => {
