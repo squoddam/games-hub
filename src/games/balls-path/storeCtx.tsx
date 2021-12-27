@@ -64,6 +64,7 @@ export const ACTIONS = {
 
   SET_SELECTED_OBSTACLE: 'SET_SELECTED_OBSTACLE',
   SET_OBSTACLE_ROTATION: 'SET_OBSTACLE_ROTATION',
+  SET_OBSTACLE_POSITION: 'SET_OBSTACLE_POSITION',
   ADD_OBSTACLE: 'ADD_OBSTACLE',
   REMOVE_OBSTACLE: 'REMOVE_OBSTACLE',
 
@@ -110,6 +111,12 @@ const actionHandlers: Record<string, StoreReducer> = {
     ...store,
     obstacles: store.obstacles.map((obstacle) =>
       obstacle.id === id ? { ...obstacle, rotation } : obstacle
+    ),
+  }),
+  [ACTIONS.SET_OBSTACLE_POSITION]: (store, { payload: { id, x, y } }) => ({
+    ...store,
+    obstacles: store.obstacles.map((obstacle) =>
+      obstacle.id === id ? { ...obstacle, x, y } : obstacle
     ),
   }),
 };

@@ -59,6 +59,7 @@ const Shape = forwardRef(({ onClick, renderFn, ...props }: ShapeProps, ref) => {
 
   useImperativeHandle(ref, () => ({
     draw,
+    g: gRef.current,
   }));
 
   useEffect(() => {

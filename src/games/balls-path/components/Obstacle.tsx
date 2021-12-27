@@ -11,6 +11,7 @@ import { ObstacleType } from '../types';
 import { ACTIONS, storeCtx } from '../storeCtx';
 import RectBody from './matterBodies/RectBody';
 import Pie from './Pie';
+import { Point } from '@/types';
 
 const OBSTACLE_WIDTH = 100;
 const OBSTACLE_HEIGHT = 30;
@@ -22,6 +23,28 @@ type ObstacleProps = {
   sideSize: number;
 } & ObstacleType;
 
+const getCoordsFromMouse = (
+  sideSize: ObstacleProps['sideSize'],
+  event: InteractionEvent
+) => {
+  const getWorldCoords = (num: number) => (num / sideSize) * WORLD_SIZE;
+
+  const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
+  const y = getWorldCoords(event.data.global.y);
+
+  return { x, y };
+};
+
+const getRotationFromMouse = (
+  sideSize: ObstacleProps['sideSize'],
+  event: InteractionEvent,
+  { x, y }: Point
+) => {
+  const { x: mouseX, y: mouseY } = getCoordsFromMouse(sideSize, event);
+
+  return Math.PI - Math.atan2(mouseX - x, mouseY - y);
+};
+
 const Obstacle = ({
   id,
   x,
@@ -31,20 +54,22 @@ const Obstacle = ({
   sideSize,
 }: ObstacleProps) => {
   const { dispatch } = useContext(storeCtx);
-  const [isDragged, setIsDragged] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isRotationDragged, setIsRotationDragged] = useState(false);
+  const [mainDragDiff, setMainDragDiff] = useState<Point | null>(null);
+  const [mousePos, setMousePos] = useState<Point | null>(null);
 
   const currentRotation = useMemo(
     () =>
-      isDragged && mousePos
+      !mainDragDiff && isRotationDragged && mousePos
         ? Math.PI - Math.atan2(mousePos.x - x, mousePos.y - y)
         : rotation,
-    [isDragged, mousePos, x, y, rotation]
+    [isRotationDragged, mousePos, x, y, rotation, mainDragDiff]
   );
 
   const options = useMemo(
     () => ({
       isStatic: true,
+      isSensor: mainDragDiff !== null,
 
       angle: currentRotation,
       collisionFilter: {
@@ -53,7 +78,7 @@ const Obstacle = ({
       },
       chamfer: { radius: RADIUS },
     }),
-    [currentRotation]
+    [currentRotation, mainDragDiff]
   );
 
   const containerRef = useRef<Graphics>(null);
@@ -73,18 +98,24 @@ const Obstacle = ({
             payload: { selectedObstacleId: id },
           });
         } else {
-          setIsDragged(true);
+          setIsRotationDragged(true);
         }
       };
 
       const handlePointerUp = (event: InteractionEvent) => {
         event.stopPropagation();
 
-        setIsDragged(false);
-        dispatch({
-          type: ACTIONS.SET_OBSTACLE_ROTATION,
-          payload: { id, rotation: currentRotation },
-        });
+        if (isRotationDragged) {
+          dispatch({
+            type: ACTIONS.SET_OBSTACLE_ROTATION,
+            payload: {
+              id,
+              rotation: getRotationFromMouse(sideSize, event, { x, y }),
+            },
+          });
+        }
+
+        setIsRotationDragged(false);
       };
 
       container.addListener('pointerdown', handlePointerDown);
@@ -97,7 +128,7 @@ const Obstacle = ({
         container.removeListener('pointerupoutside', handlePointerUp);
       };
     }
-  }, [isSelected, id, dispatch, currentRotation]);
+  }, [dispatch, id, isRotationDragged, isSelected, sideSize, x, y]);
 
   useEffect(() => {
     if (containerRef.current) {
@@ -106,13 +137,10 @@ const Obstacle = ({
       container.interactive = true;
 
       const handlePointerMove = (event: InteractionEvent) => {
-        if (isDragged) {
-          const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
-
-          const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
-          const y = getWorldCoords(event.data.global.y);
-
-          setMousePos({ x, y });
+        if (isRotationDragged || mainDragDiff) {
+          setMousePos(getCoordsFromMouse(sideSize, event));
+        } else {
+          setMousePos(null);
         }
       };
 
@@ -122,7 +150,7 @@ const Obstacle = ({
         container.removeListener('pointermove', handlePointerMove);
       };
     }
-  }, [isDragged, sideSize]);
+  }, [isRotationDragged, sideSize, mainDragDiff]);
 
   const bodyRef = useRef<Matter.Body>(null);
 
@@ -134,24 +162,82 @@ const Obstacle = ({
     }, 100);
   }, []);
 
+  const mainRef = useRef<{ g: Graphics }>(null);
+
+  useEffect(() => {
+    if (mainRef.current?.g) {
+      const main = mainRef.current.g;
+
+      main.interactive = true;
+
+      const handlePointerDown = (event: InteractionEvent) => {
+        event.stopPropagation();
+
+        if (!isSelected) {
+          dispatch({
+            type: ACTIONS.SET_SELECTED_OBSTACLE,
+            payload: { selectedObstacleId: id },
+          });
+        }
+
+        const { x: mouseX, y: mouseY } = getCoordsFromMouse(sideSize, event);
+
+        setMainDragDiff({ x: mouseX - x, y: mouseY - y });
+      };
+
+      const handlePointerUp = (event: InteractionEvent) => {
+        const { x: mouseX, y: mouseY } = getCoordsFromMouse(sideSize, event);
+
+        if (mainDragDiff !== null) {
+          dispatch({
+            type: ACTIONS.SET_OBSTACLE_POSITION,
+            payload: {
+              id,
+              x: mouseX - mainDragDiff.x,
+              y: mouseY - mainDragDiff.y,
+            },
+          });
+        }
+
+        setMainDragDiff(null);
+      };
+
+      main.addListener('pointerdown', handlePointerDown);
+      main.addListener('pointerup', handlePointerUp);
+
+      return () => {
+        main.removeListener('pointerdown', handlePointerDown);
+        main.removeListener('pointerup', handlePointerUp);
+      };
+    }
+  }, [mousePos, dispatch, id, sideSize, x, y, isSelected, mainDragDiff]);
+
+  const finalPos = useMemo(
+    () => ({
+      x: mousePos && mainDragDiff !== null ? mousePos.x - mainDragDiff.x : x,
+      y: mousePos && mainDragDiff !== null ? mousePos.y - mainDragDiff.y : y,
+    }),
+    [mainDragDiff, mousePos, x, y]
+  );
+
   return (
     <>
       <RectBody
         ref={bodyRef}
-        x={x - OBSTACLE_WIDTH / 2}
-        y={y - OBSTACLE_HEIGHT / 2}
+        x={finalPos.x - OBSTACLE_WIDTH / 2}
+        y={finalPos.y - OBSTACLE_HEIGHT / 2}
         width={OBSTACLE_WIDTH}
         height={OBSTACLE_HEIGHT}
         options={options}
       />
       <Container
         ref={containerRef}
-        x={x}
-        y={y}
+        x={finalPos.x}
+        y={finalPos.y}
         rotation={currentRotation}
         pivot={{ x, y }}
       >
-        {isSelected && (
+        {isSelected && !mainDragDiff && (
           <>
             <CircleGraphics
               x={x}
@@ -173,11 +259,13 @@ const Obstacle = ({
           </>
         )}
         <RectGraphics
+          ref={mainRef}
           x={x - OBSTACLE_WIDTH / 2}
           y={y - OBSTACLE_HEIGHT / 2}
           width={OBSTACLE_WIDTH}
           height={OBSTACLE_HEIGHT}
           options={options}
+          fillAlpha={mainDragDiff !== null ? 0.3 : 1}
         />
         <RectGraphics
           x={x - OBSTACLE_WIDTH / 2 + LAMP_MARGIN}
