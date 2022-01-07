@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Container } from '@inlet/react-pixi';
 import anime from 'animejs';
 import { nanoid } from 'nanoid';
@@ -11,7 +11,7 @@ import { ShapeRefType } from '@/components/primitives/Shape';
 
 import { WaypointBase } from '@balls/types';
 import { BALL_SIZE } from '@balls/constants';
-import { ACTIONS, GameStatus, storeCtx } from '@balls/storeCtx';
+import { ACTIONS, storeCtx } from '@balls/storeCtx';
 
 const CANNON_MARGIN = 8;
 const FORCE = 0.1;
@@ -121,9 +121,7 @@ const Cannon = ({ toFire }: { toFire: boolean }) => {
 };
 
 const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
-  const { store, dispatch } = useContext(storeCtx);
-
-  const { gameStatus } = store;
+  const { dispatch } = useContext(storeCtx);
 
   const spawnBall = () => {
     const id = nanoid();
@@ -143,25 +141,27 @@ const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
         force,
       },
     });
+
+    setToFire(true);
+
+    setTimeout(() => {
+      setToFire(false);
+    }, 0);
   };
 
+  const [toFire, setToFire] = useState(false);
+
   useEffect(() => {
-    if (gameStatus === GameStatus.RUNNING) {
-      spawnBall();
-    }
-  }, [gameStatus]);
+    const intervalId = setInterval(spawnBall, 3000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, []);
 
   return (
     <Container x={x} y={y} rotation={rotation}>
-      <Cannon toFire={gameStatus === GameStatus.RUNNING} />
-      <CircleGraphics
-        id={'center'}
-        x={0}
-        y={0}
-        radius={10}
-        fill={0xff0000}
-        withBody={false}
-      />
+      <Cannon toFire={toFire} />
     </Container>
   );
 };

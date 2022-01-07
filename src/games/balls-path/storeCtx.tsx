@@ -9,15 +9,8 @@ type BallInfo = {
   force?: Matter.Vector;
 };
 
-export enum GameStatus {
-  RUNNING = 'running',
-  PAUSED = 'paused',
-  FINISHED = 'finished',
-}
-
 type Store = {
   mousePos: Matter.Vector;
-  gameStatus: GameStatus;
   waypoints: {
     start: WaypointBase | null;
     finish: WaypointBase | null;
@@ -36,7 +29,6 @@ type StoreReducer = Reducer<Store, StoreAction>;
 
 const initialStore: Store = {
   mousePos: { x: 0, y: 0 },
-  gameStatus: GameStatus.PAUSED,
   waypoints: {
     start: null,
     finish: null,
@@ -57,7 +49,6 @@ export const storeCtx = React.createContext<StoreCtxType>({
 });
 
 export const ACTIONS = {
-  SET_GAME_STATUS: 'SET_GAME_STATUS',
   SET_WAYPOINTS: 'SET_WAYPOINTS',
   ADD_BALL: 'ADD_BALL',
   REMOVE_BALL: 'REMOVE_BALL',
@@ -75,10 +66,6 @@ const actionHandlers: Record<string, StoreReducer> = {
   [ACTIONS.SET_MOUSE_POSITION]: (store, { payload: { mousePos } }) => ({
     ...store,
     mousePos,
-  }),
-  [ACTIONS.SET_GAME_STATUS]: (store, { payload: { gameStatus } }) => ({
-    ...store,
-    gameStatus,
   }),
   [ACTIONS.SET_WAYPOINTS]: (store, { payload: { waypoints } }) => ({
     ...store,

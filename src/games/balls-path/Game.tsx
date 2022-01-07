@@ -9,7 +9,7 @@ import { MatterProvider } from './MatterCtx';
 import Walls from './components/Walls';
 import { COLLISION, MENU_SIZE, WORLD_SIZE } from './constants';
 import Ball from './components/Ball';
-import { ACTIONS, GameStatus, storeCtx, StoreProvider } from './storeCtx';
+import { ACTIONS, storeCtx, StoreProvider } from './storeCtx';
 import Start from './components/waypoints/Start';
 import Finish from './components/waypoints/Finish';
 import Obstacle from './components/Obstacle';
@@ -74,23 +74,6 @@ const Game = ({ sideSize }) => {
         },
       },
     });
-
-    dispatch({
-      type: ACTIONS.SET_GAME_STATUS,
-      payload: { gameStatus: GameStatus.RUNNING },
-    });
-
-    setInterval(() => {
-      dispatch({
-        type: ACTIONS.SET_GAME_STATUS,
-        payload: { gameStatus: GameStatus.FINISHED },
-      });
-
-      dispatch({
-        type: ACTIONS.SET_GAME_STATUS,
-        payload: { gameStatus: GameStatus.RUNNING },
-      });
-    }, 3000);
   }, []);
 
   const handleBallCollision = useCallback(
