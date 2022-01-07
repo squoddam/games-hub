@@ -55,7 +55,10 @@ const Obstacle = ({
 }: ObstacleProps) => {
   const { dispatch } = useContext(storeCtx);
   const [isRotationDragged, setIsRotationDragged] = useState(false);
-  const [mainDragDiff, setMainDragDiff] = useState<Point | null>({ x: 0, y: 0 });
+  const [mainDragDiff, setMainDragDiff] = useState<Point | null>({
+    x: 0,
+    y: 0,
+  });
   const [mousePos, setMousePos] = useState<Point | null>(null);
 
   const currentRotation = useMemo(
@@ -92,7 +95,7 @@ const Obstacle = ({
 
       container.interactive = true;
 
-      const handlePointerDown = (event: InteractionEvent) => {
+      const handleMouseDown = (event: InteractionEvent) => {
         event.stopPropagation();
 
         if (!isSelected) {
@@ -105,7 +108,7 @@ const Obstacle = ({
         }
       };
 
-      const handlePointerUp = (event: InteractionEvent) => {
+      const handleMouseUp = (event: InteractionEvent) => {
         event.stopPropagation();
 
         if (isRotationDragged) {
@@ -121,14 +124,14 @@ const Obstacle = ({
         setIsRotationDragged(false);
       };
 
-      container.addListener('pointerdown', handlePointerDown);
-      container.addListener('pointerup', handlePointerUp);
-      container.addListener('pointerupoutside', handlePointerUp);
+      container.addListener('mousedown', handleMouseDown);
+      container.addListener('mouseup', handleMouseUp);
+      container.addListener('mouseupoutside', handleMouseUp);
 
       return () => {
-        container.removeListener('pointerdown', handlePointerDown);
-        container.removeListener('pointerup', handlePointerUp);
-        container.removeListener('pointerupoutside', handlePointerUp);
+        container.removeListener('mousedown', handleMouseDown);
+        container.removeListener('mouseup', handleMouseUp);
+        container.removeListener('mouseupoutside', handleMouseUp);
       };
     }
   }, [dispatch, id, isRotationDragged, isSelected, sideSize, x, y]);
@@ -139,7 +142,7 @@ const Obstacle = ({
 
       container.interactive = true;
 
-      const handlePointerMove = (event: InteractionEvent) => {
+      const handleMouseMove = (event: InteractionEvent) => {
         if (isRotationDragged || mainDragDiff) {
           setMousePos(getCoordsFromMouse(sideSize, event));
         } else {
@@ -147,10 +150,10 @@ const Obstacle = ({
         }
       };
 
-      container.addListener('pointermove', handlePointerMove);
+      container.addListener('pointermove', handleMouseMove);
 
       return () => {
-        container.removeListener('pointermove', handlePointerMove);
+        container.removeListener('pointermove', handleMouseMove);
       };
     }
   }, [isRotationDragged, sideSize, mainDragDiff]);
@@ -173,9 +176,8 @@ const Obstacle = ({
 
       main.interactive = true;
 
-      const handlePointerDown = (event: InteractionEvent) => {
+      const handleMouseDown = (event: InteractionEvent) => {
         event.stopPropagation();
-
         if (!isSelected) {
           dispatch({
             type: ACTIONS.SET_SELECTED_OBSTACLE,
@@ -188,7 +190,7 @@ const Obstacle = ({
         setMainDragDiff({ x: mouseX - x, y: mouseY - y });
       };
 
-      const handlePointerUp = (event: InteractionEvent) => {
+      const handleMouseUp = (event: InteractionEvent) => {
         const { x: mouseX, y: mouseY } = getCoordsFromMouse(sideSize, event);
 
         if (mainDragDiff !== null) {
@@ -205,12 +207,28 @@ const Obstacle = ({
         setMainDragDiff(null);
       };
 
-      main.addListener('pointerdown', handlePointerDown);
-      main.addListener('pointerup', handlePointerUp);
+      const handleRightClick = () => {
+        dispatch({
+          type: ACTIONS.REMOVE_OBSTACLE,
+          payload: { id },
+        });
+
+        if (isSelected) {
+          dispatch({
+            type: ACTIONS.SET_SELECTED_OBSTACLE,
+            payload: { selectedObstacleId: null },
+          });
+        }
+      };
+
+      main.addListener('mousedown', handleMouseDown);
+      main.addListener('mouseup', handleMouseUp);
+      main.addListener('rightclick', handleRightClick);
 
       return () => {
-        main.removeListener('pointerdown', handlePointerDown);
-        main.removeListener('pointerup', handlePointerUp);
+        main.removeListener('mousedown', handleMouseDown);
+        main.removeListener('mouseup', handleMouseUp);
+        main.removeListener('rightclick', handleRightClick);
       };
     }
   }, [mousePos, dispatch, id, sideSize, x, y, isSelected, mainDragDiff]);

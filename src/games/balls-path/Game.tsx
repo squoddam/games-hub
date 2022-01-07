@@ -15,6 +15,7 @@ import Finish from './components/waypoints/Finish';
 import Obstacle from './components/Obstacle';
 
 const Game = ({ sideSize }) => {
+  const app = useApp();
   const { store, dispatch } = useContext(storeCtx);
 
   const { waypoints, balls, obstacles, selectedObstacleId } = store;
@@ -26,7 +27,7 @@ const Game = ({ sideSize }) => {
       const container = containerRef.current;
       container.interactive = true;
 
-      const handlePointerDown = (event: PIXI.InteractionEvent) => {
+      const handleMouseDown = (event: PIXI.InteractionEvent) => {
         const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
 
         const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
@@ -47,13 +48,21 @@ const Game = ({ sideSize }) => {
         });
       };
 
-      container.addListener('pointerdown', handlePointerDown);
+      container.addListener('mousedown', handleMouseDown);
+
+      const handleContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+      };
+
+      app.renderer.view.addEventListener('contextmenu', handleContextMenu);
 
       return () => {
-        container.removeListener('pointerdown', handlePointerDown);
+        container.removeListener('mousedown', handleMouseDown);
+        app.renderer.view.removeEventListener('contextmenu', handleContextMenu);
       };
     }
-  }, [dispatch, selectedObstacleId, sideSize]);
+  }, [app.renderer.view, dispatch, selectedObstacleId, sideSize]);
 
   useEffect(() => {
     dispatch({
