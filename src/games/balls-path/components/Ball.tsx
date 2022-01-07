@@ -18,6 +18,7 @@ const generateFill = () => FILLS[randMinMax(0, FILLS.length)];
 const Ball = ({ id, x, y, radius, force, onCollision }: BallProps) => {
   const options = useMemo(
     () => ({
+      id,
       collisionFilter: {
         category: COLLISION.CATEGORY.BALL,
         mask:
@@ -28,7 +29,7 @@ const Ball = ({ id, x, y, radius, force, onCollision }: BallProps) => {
       restitution: 1,
       ...(force && { force }),
     }),
-    []
+    [id, force]
   );
 
   const fill = useMemo(generateFill, []);

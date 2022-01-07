@@ -23,50 +23,46 @@ const Game = ({ sideSize }) => {
 
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.interactive = true;
+      const container = containerRef.current;
+      container.interactive = true;
 
-      containerRef.current.addListener(
-        'pointerdown',
-        (event) => {
-          const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
+      const handlePointerDown = (event: PIXI.InteractionEvent) => {
+        const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
 
-          const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
-          const y = getWorldCoords(event.data.global.y);
+        const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
+        const y = getWorldCoords(event.data.global.y);
 
-          const obstacleId = nanoid();
+        const obstacleId = nanoid();
 
-          // dispatch({
-          //   type: ACTIONS.ADD_OBSTACLE,
-          //   payload: { id: obstacleId, x, y, rotation: Math.PI / 20 },
-          // });
-
+        if (!selectedObstacleId) {
           dispatch({
-            type: ACTIONS.SET_SELECTED_OBSTACLE,
-            payload: { selectedObstacleId: null },
+            type: ACTIONS.ADD_OBSTACLE,
+            payload: { id: obstacleId, x, y, rotation: 0 },
           });
-        },
-        0
-      );
-    }
+        }
 
+        dispatch({
+          type: ACTIONS.SET_SELECTED_OBSTACLE,
+          payload: { selectedObstacleId: null },
+        });
+      };
+
+      container.addListener('pointerdown', handlePointerDown);
+
+      return () => {
+        container.removeListener('pointerdown', handlePointerDown);
+      };
+    }
+  }, [dispatch, selectedObstacleId, sideSize]);
+
+  useEffect(() => {
     dispatch({
       type: ACTIONS.SET_WAYPOINTS,
       payload: {
         waypoints: {
-          start: { id: nanoid(), x: 500, y: 100 },
-          finish: { id: nanoid(), x: 500, y: 600 },
+          start: { id: nanoid(), x: 100, y: 100 },
+          finish: { id: nanoid(), x: 500, y: 600, rotation: Math.PI },
         },
-      },
-    });
-
-    const obstacleId = nanoid();
-    dispatch({
-      type: ACTIONS.ADD_OBSTACLE,
-      payload: {
-        id: obstacleId,
-        x: 470,
-        y: 500,
-        rotation: 0,
       },
     });
 
@@ -85,16 +81,13 @@ const Game = ({ sideSize }) => {
         type: ACTIONS.SET_GAME_STATUS,
         payload: { gameStatus: GameStatus.RUNNING },
       });
-    }, 5000);
+    }, 3000);
   }, []);
 
   const handleBallCollision = useCallback(
-    (
-      { idA: ballId }: { idA: string; idB: string },
-      { bodyB: otherBody }: Matter.IPair
-    ) => {
+    ({ bodyA: ballBody, bodyB: otherBody }: Matter.IPair) => {
       if (otherBody.collisionFilter.category === COLLISION.CATEGORY.WALL) {
-        dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: ballId } });
+        dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: ballBody.id } });
       }
     },
     []

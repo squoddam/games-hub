@@ -1,8 +1,7 @@
-import Matter, { Composite, Engine, Events, Runner, World } from 'matter-js';
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import Matter, { Engine, Events, Runner, World } from 'matter-js';
+import React, { useContext, useEffect, useMemo, useRef } from 'react';
 
-import * as PIXI from 'pixi.js';
-import { Container, useApp } from '@inlet/react-pixi';
+import { useApp } from '@inlet/react-pixi';
 import { UseMatterProps } from './types';
 import { nanoid } from 'nanoid';
 
@@ -10,11 +9,9 @@ const engine = Engine.create();
 engine.timing.timeScale = 0.2;
 
 export const MatterCtx = React.createContext<{
-  container: PIXI.Container | null;
   setCollisionListener: (x: {
-    id: string;
     body: Matter.Body;
-    listener: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
+    listener: (pair: Matter.IPair) => void;
   }) => void;
   removeCollisionListener: (body: Matter.Body) => void;
 }>({});
@@ -29,15 +26,13 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
   const collisionListeners = useRef(new Map());
 
   const setCollisionListener = ({
-    id,
     body,
     listener,
   }: {
-    id: string;
     body: Matter.Body;
-    listener: (ids: { idA: string; idB: string }, pair: Matter.IPair) => void;
+    listener: (pair: Matter.IPair) => void;
   }) => {
-    collisionListeners.current.set(body, { id, listener, body });
+    collisionListeners.current.set(body, { listener, body });
 
     Events.on(engine, 'collisionStart', (event) => {
       const { pairs } = event;
@@ -48,25 +43,13 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
           collisionListeners.current.get(bodyB),
         ];
 
-        configA?.listener(
-          {
-            idA: configA?.id,
-            idB: configB?.id,
-          },
-          pair
-        );
+        configA?.listener(pair);
 
-        configB?.listener(
-          {
-            idA: configB?.id,
-            idB: configA?.id,
-          },
-          {
-            ...pair,
-            bodyA: bodyB,
-            bodyB: bodyA,
-          }
-        );
+        configB?.listener({
+          ...pair,
+          bodyA: bodyB,
+          bodyB: bodyA,
+        });
       });
     });
   };
@@ -79,28 +62,15 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
     Runner.run(engine);
   }, [pixiApp]);
 
-  const [container, setContainer] = useState<PIXI.Container | null>(null);
-  const containerRef = useRef<PIXI.Container>(null);
-
-  useEffect(() => {
-    if (containerRef.current) {
-      containerRef.current.interactive = true;
-      setContainer(containerRef.current);
-    }
-  }, []);
-
   return (
-    <Container ref={containerRef} name="matter">
-      <MatterCtx.Provider
-        value={{
-          container, // TODO: remove this
-          setCollisionListener,
-          removeCollisionListener,
-        }}
-      >
-        {children}
-      </MatterCtx.Provider>
-    </Container>
+    <MatterCtx.Provider
+      value={{
+        setCollisionListener,
+        removeCollisionListener,
+      }}
+    >
+      {children}
+    </MatterCtx.Provider>
   );
 };
 
@@ -116,7 +86,6 @@ export const useMatter = ({ id, body, onCollision }: UseMatterProps) => {
 
     if (onCollision) {
       setCollisionListener({
-        id: bodyId,
         body,
         listener: onCollision,
       });

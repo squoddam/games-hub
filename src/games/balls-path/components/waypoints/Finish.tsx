@@ -1,6 +1,10 @@
 import { nanoid } from 'nanoid';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useContext, useMemo } from 'react';
+import Matter from 'matter-js';
 
+import { useDebounce } from '@/hooks';
+
+import { ACTIONS, storeCtx } from '@balls/storeCtx';
 import { WaypointBase } from '@balls/types';
 import { BALL_SIZE, COLLISION } from '@balls/constants';
 
@@ -18,6 +22,7 @@ type BinProps = {
 };
 
 const Bin = ({ x, y, rotation = 0 }: BinProps) => {
+  const { dispatch } = useContext(storeCtx);
   const options = useMemo(
     () => ({
       isStatic: true,
@@ -68,6 +73,15 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
     []
   );
 
+  const handleSensorCollision = useDebounce(
+    ({ bodyB: otherBody }: Matter.IPair) => {
+      if (otherBody.collisionFilter.category === COLLISION.CATEGORY.BALL) {
+        dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: otherBody.id } });
+      }
+    },
+    100
+  );
+
   return (
     <Composite x={x} y={y} rotation={rotation}>
       {rects.map(({ id, ...rectProps }) => (
@@ -79,7 +93,7 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
         width={BIN_SIZE}
         height={BIN_SIZE}
         options={sensorOptions}
-        onCollision={console.log}
+        onCollision={handleSensorCollision}
       />
     </Composite>
   );

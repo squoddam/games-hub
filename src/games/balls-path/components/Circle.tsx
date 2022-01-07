@@ -12,7 +12,7 @@ import CircleBody, { CircleBodyProps } from './matterBodies/CircleBody';
 type CircleType = CircleBodyProps & CircleGraphicsProps;
 
 const Circle = forwardRef(
-  ({ id, x, y, radius, options, onCollision, fill }: CircleType, ref) => {
+  ({ x, y, radius, options, onCollision, fill }: CircleType, ref) => {
     const bodyRef = useRef<Body | null>(null);
     const graphicsRef = useRef<ShapeRefType>(null);
 
@@ -38,7 +38,6 @@ const Circle = forwardRef(
       <>
         <CircleBody
           ref={bodyRef}
-          id={id}
           x={x}
           y={y}
           radius={radius}

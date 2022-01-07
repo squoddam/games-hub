@@ -13,7 +13,7 @@ export type CircleBodyProps = {
 };
 
 const CircleBody = forwardRef(
-  ({ id, x, y, radius, options, onCollision }: CircleBodyProps, ref) => {
+  ({ x, y, radius, options, onCollision }: CircleBodyProps, ref) => {
     const body = useMemo<Body>(
       () => Bodies.circle(x, y, radius, options),
       [x, y, radius, options]
@@ -23,11 +23,10 @@ const CircleBody = forwardRef(
 
     const matterConfig = useMemo(
       () => ({
-        id,
         body,
         onCollision,
       }),
-      [body, onCollision, id]
+      [body, onCollision]
     );
 
     useMatter(matterConfig);

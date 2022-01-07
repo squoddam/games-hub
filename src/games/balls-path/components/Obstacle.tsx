@@ -55,7 +55,7 @@ const Obstacle = ({
 }: ObstacleProps) => {
   const { dispatch } = useContext(storeCtx);
   const [isRotationDragged, setIsRotationDragged] = useState(false);
-  const [mainDragDiff, setMainDragDiff] = useState<Point | null>(null);
+  const [mainDragDiff, setMainDragDiff] = useState<Point | null>({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState<Point | null>(null);
 
   const currentRotation = useMemo(
@@ -74,7 +74,10 @@ const Obstacle = ({
       angle: currentRotation,
       collisionFilter: {
         category: COLLISION.CATEGORY.OBSTACLE,
-        mask: COLLISION.CATEGORY.BALL,
+        mask:
+          COLLISION.CATEGORY.BALL |
+          COLLISION.CATEGORY.BIN |
+          COLLISION.CATEGORY.OBSTACLE,
       },
       chamfer: { radius: RADIUS },
     }),
