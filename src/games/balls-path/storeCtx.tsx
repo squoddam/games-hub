@@ -18,6 +18,7 @@ type Store = {
   balls: BallInfo[];
   obstacles: ObstacleType[];
   selectedObstacleId: string | null;
+  collectedAmount: number;
 };
 
 type StoreAction = {
@@ -36,6 +37,7 @@ const initialStore: Store = {
   balls: [],
   obstacles: [],
   selectedObstacleId: null,
+  collectedAmount: 0,
 };
 
 type StoreCtxType = {
@@ -60,6 +62,8 @@ export const ACTIONS = {
   REMOVE_OBSTACLE: 'REMOVE_OBSTACLE',
 
   SET_MOUSE_POSITION: 'SET_MOUSE_POSITION',
+
+  SET_COLLECTED_AMOUNT: 'SET_COLLECTED_AMOUNT',
 };
 
 const actionHandlers: Record<string, StoreReducer> = {
@@ -105,6 +109,13 @@ const actionHandlers: Record<string, StoreReducer> = {
     obstacles: store.obstacles.map((obstacle) =>
       obstacle.id === id ? { ...obstacle, x, y } : obstacle
     ),
+  }),
+  [ACTIONS.SET_COLLECTED_AMOUNT]: (
+    store,
+    { payload: { collectedAmount } }
+  ) => ({
+    ...store,
+    collectedAmount,
   }),
 };
 

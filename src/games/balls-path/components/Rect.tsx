@@ -1,11 +1,13 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 import { useTick } from '@inlet/react-pixi';
 
 import { ShapeRefType } from '@/components/primitives/Shape';
 import { Body } from 'matter-js';
 
 import RectBody, { RectBodyProps } from './matterBodies/RectBody';
-import PolygonGraphics, { PolygonGraphicsProps } from '@/components/primitives/PolygonGraphics';
+import PolygonGraphics, {
+  PolygonGraphicsProps,
+} from '@/components/primitives/PolygonGraphics';
 
 type RectProps = RectBodyProps & PolygonGraphicsProps;
 
@@ -31,6 +33,16 @@ const Rect = forwardRef(
       }
     });
 
+    const path = useMemo(
+      () => [
+        { x, y },
+        { x: x + width, y },
+        { x: x + width, y: y + height },
+        { x, y: y + height },
+      ],
+      [height, width, x, y]
+    );
+
     return (
       <>
         <RectBody
@@ -41,16 +53,7 @@ const Rect = forwardRef(
           height={height}
           options={options}
         />
-        <PolygonGraphics
-          ref={graphicsRef}
-          fill={fill}
-          path={[
-            { x, y },
-            { x: x + width, y },
-            { x: x + width, y: y + height },
-            { x, y: y + height },
-          ]}
-        />
+        <PolygonGraphics ref={graphicsRef} fill={fill} path={path} />
       </>
     );
   }

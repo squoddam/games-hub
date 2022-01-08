@@ -1,10 +1,11 @@
-import { useCallback, useContext, useEffect, useRef } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import * as PIXI from 'pixi.js';
 import { Container, Stage, useApp } from '@inlet/react-pixi';
 import { nanoid } from 'nanoid';
 
 import RectGraphics from '@/components/primitives/RectGraphics';
+import LEVELS from './levels';
 import { MatterProvider } from './MatterCtx';
 import Walls from './components/Walls';
 import { COLLISION, MENU_SIZE, WORLD_SIZE } from './constants';
@@ -13,12 +14,18 @@ import { ACTIONS, storeCtx, StoreProvider } from './storeCtx';
 import Start from './components/waypoints/Start';
 import Finish from './components/waypoints/Finish';
 import Obstacle from './components/Obstacle';
+import { LevelType } from './types';
 
-const Game = ({ sideSize }) => {
+type GameProps = {
+  sideSize: number;
+  level: LevelType;
+};
+
+const Game = ({ sideSize, level }: GameProps) => {
   const app = useApp();
   const { store, dispatch } = useContext(storeCtx);
 
-  const { waypoints, balls, obstacles, selectedObstacleId } = store;
+  const { balls, obstacles, selectedObstacleId } = store;
 
   const containerRef = useRef<PIXI.Container>(null);
 
@@ -64,22 +71,14 @@ const Game = ({ sideSize }) => {
     }
   }, [app.renderer.view, dispatch, selectedObstacleId, sideSize]);
 
-  useEffect(() => {
-    dispatch({
-      type: ACTIONS.SET_WAYPOINTS,
-      payload: {
-        waypoints: {
-          start: { id: nanoid(), x: 100, y: 100 },
-          finish: { id: nanoid(), x: 500, y: 600, rotation: Math.PI },
-        },
-      },
-    });
-  }, []);
-
   const handleBallCollision = useCallback(
     ({ bodyA: ballBody, bodyB: otherBody }: Matter.IPair) => {
       if (otherBody.collisionFilter.category === COLLISION.CATEGORY.WALL) {
         dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: ballBody.id } });
+        dispatch({
+          type: ACTIONS.SET_COLLECTED_AMOUNT,
+          payload: { collectedAmount: 0 },
+        });
       }
     },
     []
@@ -133,8 +132,8 @@ const Game = ({ sideSize }) => {
           />
         ))}
 
-        {waypoints.start && <Start {...waypoints.start} />}
-        {waypoints.finish && <Finish {...waypoints.finish} />}
+        {level.start && <Start {...level.start} />}
+        {level.finish && <Finish {...level.finish} />}
       </Container>
     </Container>
   );
@@ -148,6 +147,7 @@ const STAGE_OPTIONS = {
 };
 
 const Board = ({ sideSize }) => {
+  const [currLevel, setCurrLevel] = useState(0);
   const containerRef = useRef<PIXI.Container>(null);
 
   useEffect(() => {
@@ -165,7 +165,7 @@ const Board = ({ sideSize }) => {
       <Container ref={containerRef} name="board">
         <StoreProvider>
           <MatterProvider>
-            <Game sideSize={sideSize} />
+            <Game sideSize={sideSize} level={LEVELS[currLevel]} />
           </MatterProvider>
         </StoreProvider>
       </Container>

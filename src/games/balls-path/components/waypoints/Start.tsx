@@ -1,4 +1,11 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  forwardRef,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 import { Container } from '@inlet/react-pixi';
 import anime from 'animejs';
 import { nanoid } from 'nanoid';
@@ -18,7 +25,7 @@ const FORCE = 0.1;
 
 const ANIM_DURATION = 1;
 
-const Cannon = ({ toFire }: { toFire: boolean }) => {
+const Cannon = forwardRef((props, ref) => {
   const barrel2Ref = useRef<ShapeRefType | null>(null);
   const muzzleRef = useRef<ShapeRefType | null>(null);
 
@@ -79,12 +86,16 @@ const Cannon = ({ toFire }: { toFire: boolean }) => {
 
   const anim2 = useAnime(anim2Config);
 
-  useEffect(() => {
-    if (toFire) {
-      anim1.play();
-      anim2.play();
-    }
-  }, [toFire, anim1, anim2]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      fire: () => {
+        anim1.play();
+        anim2.play();
+      },
+    }),
+    [anim1, anim2]
+  );
 
   return (
     <Container>
@@ -118,10 +129,14 @@ const Cannon = ({ toFire }: { toFire: boolean }) => {
       />
     </Container>
   );
-};
+});
+
+Cannon.displayName = 'Cannon';
 
 const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
   const { dispatch } = useContext(storeCtx);
+
+  const cannonRef = useRef<{ fire: () => void } | null>(null);
 
   const spawnBall = () => {
     const id = nanoid();
@@ -142,14 +157,10 @@ const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
       },
     });
 
-    setToFire(true);
-
-    setTimeout(() => {
-      setToFire(false);
-    }, 0);
+    if (cannonRef.current) {
+      cannonRef.current.fire();
+    }
   };
-
-  const [toFire, setToFire] = useState(false);
 
   useEffect(() => {
     const intervalId = setInterval(spawnBall, 3000);
@@ -161,7 +172,7 @@ const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
 
   return (
     <Container x={x} y={y} rotation={rotation}>
-      <Cannon toFire={toFire} />
+      <Cannon ref={cannonRef} />
     </Container>
   );
 };

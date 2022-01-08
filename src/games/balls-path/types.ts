@@ -11,6 +11,11 @@ export type WaypointBase = {
   rotation?: number;
 };
 
+export type LevelType = {
+  start: WaypointBase;
+  finish: WaypointBase;
+}
+
 export type ObstacleType = {
   id: string;
   x: number;

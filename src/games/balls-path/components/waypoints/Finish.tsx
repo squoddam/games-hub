@@ -1,8 +1,10 @@
 import { nanoid } from 'nanoid';
 import React, { memo, useContext, useMemo } from 'react';
 import Matter from 'matter-js';
+import { Container, Text } from '@inlet/react-pixi';
 
 import { useDebounce } from '@/hooks';
+import CircleGraphics from '@/components/primitives/CircleGraphics';
 
 import { ACTIONS, storeCtx } from '@balls/storeCtx';
 import { WaypointBase } from '@balls/types';
@@ -15,6 +17,30 @@ import Composite from '../Composite';
 const BIN_SIZE = BALL_SIZE * 2.2;
 const BIN_WALL_SIZE = 10;
 
+const Counter = ({
+  x,
+  y,
+  collectedAmount,
+  totalAmount,
+}: {
+  x: number;
+  y: number;
+  collectedAmount: number;
+  totalAmount: number;
+}) => (
+  <Container x={x} y={y}>
+    <CircleGraphics
+      x={0}
+      y={0}
+      fillAlpha={0}
+      stroke={0x000000}
+      strokeWidth={2}
+      radius={BALL_SIZE}
+    />
+    <Text x={0} y={0} anchor={0.5} text={`${collectedAmount}/${totalAmount}`} />
+  </Container>
+);
+
 type BinProps = {
   x: number;
   y: number;
@@ -22,7 +48,10 @@ type BinProps = {
 };
 
 const Bin = ({ x, y, rotation = 0 }: BinProps) => {
-  const { dispatch } = useContext(storeCtx);
+  const { dispatch, store } = useContext(storeCtx);
+
+  const { collectedAmount } = store;
+
   const options = useMemo(
     () => ({
       isStatic: true,
@@ -77,6 +106,10 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
     ({ bodyB: otherBody }: Matter.IPair) => {
       if (otherBody.collisionFilter.category === COLLISION.CATEGORY.BALL) {
         dispatch({ type: ACTIONS.REMOVE_BALL, payload: { id: otherBody.id } });
+        dispatch({
+          type: ACTIONS.SET_COLLECTED_AMOUNT,
+          payload: { collectedAmount: collectedAmount + 1 },
+        });
       }
     },
     100
@@ -94,6 +127,16 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
         height={BIN_SIZE}
         options={sensorOptions}
         onCollision={handleSensorCollision}
+      />
+      <Counter
+        x={
+          Math.cos(rotation + Math.PI / 2) * (BALL_SIZE + BIN_WALL_SIZE * 2) + x
+        }
+        y={
+          Math.sin(rotation + Math.PI / 2) * (BALL_SIZE + BIN_WALL_SIZE * 2) + y
+        }
+        collectedAmount={collectedAmount}
+        totalAmount={5}
       />
     </Composite>
   );
