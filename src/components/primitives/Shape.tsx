@@ -17,6 +17,7 @@ export type ShapeProps = {
 
 export type ShapeRefType = {
   draw: (nextProps: Partial<ShapeProps>) => void;
+  g: PixiGraphics;
 };
 
 const decorateRender =

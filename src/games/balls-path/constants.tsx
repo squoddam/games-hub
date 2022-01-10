@@ -11,3 +11,5 @@ export const COLLISION = {
 };
 
 export const BALL_SIZE = 30;
+
+export const COLORS = [0xfbb037, 0x6622cc, 0x84d473, 0xfb62f6, 0x333333];

@@ -1,5 +1,14 @@
 import { nanoid } from 'nanoid';
-import React, { memo, useContext, useMemo } from 'react';
+import React, {
+  forwardRef,
+  memo,
+  useCallback,
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+} from 'react';
 import Matter from 'matter-js';
 import { Container, Text } from '@inlet/react-pixi';
 
@@ -8,14 +17,90 @@ import CircleGraphics from '@/components/primitives/CircleGraphics';
 
 import { ACTIONS, storeCtx } from '@balls/storeCtx';
 import { WaypointBase } from '@balls/types';
-import { BALL_SIZE, COLLISION } from '@balls/constants';
+import { BALL_SIZE, COLLISION, COLORS } from '@balls/constants';
 
 import Rect from '../Rect';
 import RectBody from '../matterBodies/RectBody';
 import Composite from '../Composite';
+import { randMinMax, times } from '@/utils';
+import { ShapeRefType } from '@/components/primitives/Shape';
+import { tween } from 'shifty';
 
 const BIN_SIZE = BALL_SIZE * 2.2;
 const BIN_WALL_SIZE = 10;
+
+const SPARKLES_AMOUNT = 10;
+const SPARKLE_RADIUS = 10;
+const SPARKLES_DISTANCE = BALL_SIZE * 4;
+
+const Sparkles = memo(
+  forwardRef((props, ref) => {
+    const sparklesRef = useRef<ShapeRefType[]>([]);
+
+    const addToSparklesRef = useCallback(
+      (i) => (sparkleRef: ShapeRefType) => {
+        sparklesRef.current[i] = sparkleRef;
+      },
+      []
+    );
+
+    useImperativeHandle(
+      ref,
+      () => ({
+        fire: () => {
+          const randomSparkles = times(SPARKLES_AMOUNT).map(() => {
+            const angle = randMinMax(0, Math.PI * 2);
+            return {
+              x:
+                Math.cos(angle) *
+                randMinMax(-SPARKLES_DISTANCE, SPARKLES_DISTANCE),
+              y:
+                Math.sign(angle) *
+                randMinMax(-SPARKLES_DISTANCE, SPARKLES_DISTANCE),
+            };
+          });
+
+          sparklesRef.current.forEach((sparkleRef) => {
+            sparkleRef?.draw({
+              fillAlpha: 1,
+            });
+          });
+          tween({
+            render: ({ t }: { t: number }) => {
+              sparklesRef.current.forEach((sparkleRef, i) => {
+                sparkleRef?.draw({
+                  x: randomSparkles[i].x * t,
+                  y: randomSparkles[i].y * t,
+                  fillAlpha: 1 - t,
+                });
+              });
+            },
+            from: { t: 0 },
+            to: { t: 1 },
+            easing: 'easeOutSine',
+          });
+        },
+      }),
+      []
+    );
+
+    return (
+      <>
+        {times(SPARKLES_AMOUNT).map((i) => (
+          <CircleGraphics
+            key={i}
+            ref={addToSparklesRef(i)}
+            radius={SPARKLE_RADIUS}
+            fillAlpha={0}
+            fill={COLORS[randMinMax(0, COLORS.length)]}
+          />
+        ))}
+      </>
+    );
+  })
+);
+
+Sparkles.displayName = 'Sparkles';
 
 const Counter = ({
   x,
@@ -27,19 +112,33 @@ const Counter = ({
   y: number;
   collectedAmount: number;
   totalAmount: number;
-}) => (
-  <Container x={x} y={y}>
-    <CircleGraphics
-      x={0}
-      y={0}
-      fillAlpha={0}
-      stroke={0x000000}
-      strokeWidth={2}
-      radius={BALL_SIZE}
-    />
-    <Text x={0} y={0} anchor={0.5} text={`${collectedAmount}/${totalAmount}`} />
-  </Container>
-);
+}) => {
+  const sparklesRef = useRef<{ fire: () => void }>(null);
+
+  useEffect(() => {
+    sparklesRef.current?.fire();
+  }, [collectedAmount]);
+
+  return (
+    <Container x={x} y={y}>
+      <Sparkles ref={sparklesRef} />
+      <CircleGraphics
+        x={0}
+        y={0}
+        fillAlpha={0}
+        stroke={0x000000}
+        strokeWidth={2}
+        radius={BALL_SIZE}
+      />
+      <Text
+        x={0}
+        y={0}
+        anchor={0.5}
+        text={`${collectedAmount}/${totalAmount}`}
+      />
+    </Container>
+  );
+};
 
 type BinProps = {
   x: number;

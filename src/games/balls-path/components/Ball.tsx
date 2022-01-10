@@ -2,7 +2,7 @@ import { memo, useMemo } from 'react';
 
 import { randMinMax } from '@/utils';
 
-import { COLLISION } from '../constants';
+import { COLLISION, COLORS } from '../constants';
 import { CircleBodyProps } from './matterBodies/CircleBody';
 import Circle from './Circle';
 
@@ -11,9 +11,7 @@ type BallProps = { force?: Matter.Vector } & Omit<
   'options' | 'fill'
 >;
 
-const FILLS = [0xfbb037, 0x6622cc, 0x84d473, 0xfb62f6, 0x333333];
-
-const generateFill = () => FILLS[randMinMax(0, FILLS.length)];
+const generateFill = () => COLORS[randMinMax(0, COLORS.length)];
 
 const Ball = ({ id, x, y, radius, force, onCollision }: BallProps) => {
   const options = useMemo(
