@@ -3,14 +3,10 @@ import {
   useContext,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
 } from 'react';
 import { Container } from '@inlet/react-pixi';
-import anime from 'animejs';
 import { nanoid } from 'nanoid';
-
-import { useAnime } from '@/hooks';
 
 import RectGraphics from '@/components/primitives/RectGraphics';
 import CircleGraphics from '@/components/primitives/CircleGraphics';
@@ -19,6 +15,7 @@ import { ShapeRefType } from '@/components/primitives/Shape';
 import { WaypointBase } from '@balls/types';
 import { BALL_SIZE } from '@balls/constants';
 import { ACTIONS, storeCtx } from '@balls/storeCtx';
+import { tween, Tweenable } from 'shifty';
 
 const CANNON_MARGIN = 8;
 const FORCE = 0.1;
@@ -29,72 +26,37 @@ const Cannon = forwardRef((props, ref) => {
   const barrel2Ref = useRef<ShapeRefType | null>(null);
   const muzzleRef = useRef<ShapeRefType | null>(null);
 
-  const anime1Config = useMemo(
-    () => ({
-      targets: { y: BALL_SIZE },
-      keyframes: [
-        {
-          y: BALL_SIZE - CANNON_MARGIN * 2,
-          easing: 'linear',
-          duration: 100,
-        },
-        { y: BALL_SIZE, easing: 'easeOutCirc', duration: 300 },
-      ],
-      config: {
-        delay: 50,
-      },
-      update: (anim: anime.AnimeInstance) => {
-        const { y } = anim.animatables[0].target;
-
-        if (barrel2Ref.current) {
-          barrel2Ref.current.draw({ y });
-        }
-      },
-      autoplay: false,
-    }),
-    []
-  );
-
-  const anim1 = useAnime(anime1Config);
-
-  const anim2Config = useMemo(
-    () => ({
-      targets: { y: BALL_SIZE * 2 + CANNON_MARGIN },
-      keyframes: [
-        {
-          y: BALL_SIZE * 2 - CANNON_MARGIN * 2,
-          easing: 'linear',
-          duration: 100 * ANIM_DURATION,
-        },
-        {
-          y: BALL_SIZE * 2 + CANNON_MARGIN,
-          easing: 'easeOutCirc',
-          duration: 300 * ANIM_DURATION,
-        },
-      ],
-      update: (anim: anime.AnimeInstance) => {
-        const { y } = anim.animatables[0].target;
-
-        if (muzzleRef.current) {
-          muzzleRef.current.draw({ y });
-        }
-      },
-      autoplay: false,
-    }),
-    []
-  );
-
-  const anim2 = useAnime(anim2Config);
-
   useImperativeHandle(
     ref,
     () => ({
       fire: () => {
-        anim1.play();
-        anim2.play();
+        tween({
+          render: ({ t }: { t: number }) => {
+            if (barrel2Ref.current) {
+              barrel2Ref.current.draw({ y: BALL_SIZE - CANNON_MARGIN * 2 * t });
+            }
+
+            if (muzzleRef.current) {
+              muzzleRef.current.draw({
+                y: BALL_SIZE * 2 + CANNON_MARGIN - CANNON_MARGIN * 3 * t,
+              });
+            }
+          },
+          from: { t: 0 },
+          to: { t: 1 },
+          easing: 'linear',
+          duration: 100 * ANIM_DURATION,
+          delay: 50,
+        }).then(({ tweenable }: { tweenable: Tweenable }) => {
+          tweenable.tween({
+            to: { t: 0 },
+            easing: 'easeOutCirc',
+            duration: 300 * ANIM_DURATION,
+          });
+        }, console.error);
       },
     }),
-    [anim1, anim2]
+    []
   );
 
   return (

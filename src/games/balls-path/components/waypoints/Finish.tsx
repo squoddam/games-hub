@@ -116,18 +116,20 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
   );
 
   return (
-    <Composite x={x} y={y} rotation={rotation}>
-      {rects.map(({ id, ...rectProps }) => (
-        <Rect key={id} {...rectProps} options={options} />
-      ))}
-      <RectBody
-        x={-BIN_SIZE / 2}
-        y={0}
-        width={BIN_SIZE}
-        height={BIN_SIZE}
-        options={sensorOptions}
-        onCollision={handleSensorCollision}
-      />
+    <>
+      <Composite x={x} y={y} rotation={rotation}>
+        {rects.map(({ id, ...rectProps }) => (
+          <Rect key={id} {...rectProps} options={options} />
+        ))}
+        <RectBody
+          x={-BIN_SIZE / 2}
+          y={BIN_WALL_SIZE}
+          width={BIN_SIZE}
+          height={BIN_SIZE}
+          options={sensorOptions}
+          onCollision={handleSensorCollision}
+        />
+      </Composite>
       <Counter
         x={
           Math.cos(rotation + Math.PI / 2) * (BALL_SIZE + BIN_WALL_SIZE * 2) + x
@@ -138,7 +140,7 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
         collectedAmount={collectedAmount}
         totalAmount={5}
       />
-    </Composite>
+    </>
   );
 };
 

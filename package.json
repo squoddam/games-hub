@@ -20,7 +20,8 @@
     "pixi-viewport": "4.33.0",
     "pixi.js": "6.1.3",
     "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "react-dom": "17.0.2",
+    "shifty": "^2.17.1"
   },
   "devDependencies": {
     "@types/animejs": "^3.1.4",
