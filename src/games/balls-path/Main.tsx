@@ -5,7 +5,7 @@ import { useWindowResize } from '@/hooks';
 import styles from '@/styles.module.css';
 
 import Game from './Game';
-import LEVELS from './levels';
+import LEVELS from './levels.json';
 
 enum Status {
   ready,

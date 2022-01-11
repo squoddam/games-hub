@@ -13,7 +13,9 @@ export const MatterCtx = React.createContext<{
     body: Matter.Body;
     listener: (pair: Matter.IPair) => void;
   }) => (body: Matter.Body) => void;
-}>({});
+}>({
+  setCollisionListener: () => () => {},
+});
 
 type MatterProviderProps = {
   children: React.ReactElement;

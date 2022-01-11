@@ -1,5 +1,6 @@
 import Matter from 'matter-js';
 import React, { useEffect, useRef } from 'react';
+import { BodyShapeRef } from '../types';
 
 type CompositeProps = {
   children: React.ReactNode | React.ReactNode[] | null;
@@ -46,24 +47,29 @@ const Composite = ({ children, x, y, rotation = 0 }: CompositeProps) => {
     }
   }, [x, y, rotation]);
 
-  return React.Children.map<React.ReactNode, React.ReactNode>(
-    children,
-    (child) => {
-      if (React.isValidElement(child)) {
-        return React.cloneElement(child, {
-          ref: (ref) => {
-            if (ref !== null) {
-              const body = ref.body || ref;
-              if (body) {
-                childrenRef.current[body.id] = body;
-              }
-            }
-          },
-        });
-      }
+  return (
+    <>
+      {React.Children.map<React.ReactNode, React.ReactNode>(
+        children,
+        (child) => {
+          if (React.isValidElement(child)) {
+            return React.cloneElement(child, {
+              ref: (ref: Matter.Body | BodyShapeRef) => {
+                if (ref) {
+                  const body = (ref as BodyShapeRef).body || ref;
 
-      return null;
-    }
+                  if (body) {
+                    childrenRef.current[body.id] = body;
+                  }
+                }
+              },
+            });
+          }
+
+          return null;
+        }
+      )}
+    </>
   );
 };
 
