@@ -1,9 +1,9 @@
 import Matter, { Engine, Events, Runner, World } from 'matter-js';
 import React, { useContext, useEffect, useMemo, useRef } from 'react';
-
 import { useApp } from '@inlet/react-pixi';
-import { UseMatterProps } from './types';
 import { nanoid } from 'nanoid';
+
+import { UseMatterProps } from './types';
 
 const engine = Engine.create();
 engine.timing.timeScale = 0.2;
@@ -12,8 +12,7 @@ export const MatterCtx = React.createContext<{
   setCollisionListener: (x: {
     body: Matter.Body;
     listener: (pair: Matter.IPair) => void;
-  }) => void;
-  removeCollisionListener: (body: Matter.Body) => void;
+  }) => (body: Matter.Body) => void;
 }>({});
 
 type MatterProviderProps = {
@@ -34,7 +33,9 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
   }) => {
     collisionListeners.current.set(body, { listener, body });
 
-    Events.on(engine, 'collisionStart', (event) => {
+    const handleCollisionStart = (
+      event: Matter.IEventCollision<Matter.Engine>
+    ) => {
       const { pairs } = event;
       pairs.forEach((pair) => {
         const { bodyA, bodyB } = pair;
@@ -51,22 +52,29 @@ export const MatterProvider = ({ children }: MatterProviderProps) => {
           bodyB: bodyA,
         });
       });
-    });
-  };
+    };
 
-  const removeCollisionListener = (body: Matter.Body) => {
-    collisionListeners.current.delete(body);
+    Events.on(engine, 'collisionStart', handleCollisionStart);
+
+    return () => {
+      Events.off(engine, 'collisionStart', handleCollisionStart);
+
+      collisionListeners.current.delete(body);
+    };
   };
 
   useEffect(() => {
-    Runner.run(engine);
+    const runner = Runner.run(engine);
+
+    return () => {
+      Runner.stop(runner);
+    };
   }, [pixiApp]);
 
   return (
     <MatterCtx.Provider
       value={{
         setCollisionListener,
-        removeCollisionListener,
       }}
     >
       {children}
@@ -78,34 +86,27 @@ export const useMatter = ({ id, body, onCollision }: UseMatterProps) => {
   const pixiApp = useApp();
   const bodyId = useMemo(() => id || nanoid(), [id]);
 
-  const { setCollisionListener, removeCollisionListener } =
-    useContext(MatterCtx);
+  const { setCollisionListener } = useContext(MatterCtx);
 
   useEffect(() => {
     World.addBody(engine.world, body);
 
+    let removeCollisionListener: (body: Matter.Body) => void;
     if (onCollision) {
-      setCollisionListener({
+      removeCollisionListener = setCollisionListener({
         body,
         listener: onCollision,
       });
     }
 
     return () => {
-      if (onCollision) {
+      if (removeCollisionListener) {
         removeCollisionListener(body);
       }
 
       World.remove(engine.world, body);
     };
-  }, [
-    bodyId,
-    body,
-    onCollision,
-    pixiApp,
-    setCollisionListener,
-    removeCollisionListener,
-  ]);
+  }, [bodyId, body, onCollision, pixiApp, setCollisionListener]);
 
   return null;
 };

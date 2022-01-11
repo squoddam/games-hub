@@ -5,10 +5,11 @@ import { Container, Stage, useApp } from '@inlet/react-pixi';
 import { nanoid } from 'nanoid';
 
 import RectGraphics from '@/components/primitives/RectGraphics';
+
 import LEVELS from './levels';
 import { MatterProvider } from './MatterCtx';
 import Walls from './components/Walls';
-import { COLLISION, MENU_SIZE, WORLD_SIZE } from './constants';
+import { COLLISION, REQUIRED_AMOUNT, WORLD_SIZE } from './constants';
 import Ball from './components/Ball';
 import { ACTIONS, storeCtx, StoreProvider } from './storeCtx';
 import Start from './components/waypoints/Start';
@@ -19,13 +20,20 @@ import { LevelType } from './types';
 type GameProps = {
   sideSize: number;
   level: LevelType;
+  onFinish: () => void;
 };
 
-const Game = ({ sideSize, level }: GameProps) => {
+const Game = ({ sideSize, level, onFinish }: GameProps) => {
   const app = useApp();
   const { store, dispatch } = useContext(storeCtx);
 
-  const { balls, obstacles, selectedObstacleId } = store;
+  const { balls, obstacles, selectedObstacleId, collectedAmount } = store;
+
+  useEffect(() => {
+    if (collectedAmount >= REQUIRED_AMOUNT) {
+      onFinish();
+    }
+  }, [collectedAmount, onFinish]);
 
   const containerRef = useRef<PIXI.Container>(null);
 
@@ -35,9 +43,9 @@ const Game = ({ sideSize, level }: GameProps) => {
       container.interactive = true;
 
       const handleMouseDown = (event: PIXI.InteractionEvent) => {
-        const getWorldCoords = (num) => (num / sideSize) * WORLD_SIZE;
+        const getWorldCoords = (num: number): number => (num / sideSize) * WORLD_SIZE;
 
-        const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
+        const x = getWorldCoords(event.data.global.x);
         const y = getWorldCoords(event.data.global.y);
 
         const obstacleId = nanoid();
@@ -66,7 +74,7 @@ const Game = ({ sideSize, level }: GameProps) => {
 
       return () => {
         container.removeListener('mousedown', handleMouseDown);
-        app.renderer.view.removeEventListener('contextmenu', handleContextMenu);
+        app.renderer?.view.removeEventListener('contextmenu', handleContextMenu);
       };
     }
   }, [app.renderer.view, dispatch, selectedObstacleId, sideSize]);
@@ -81,7 +89,7 @@ const Game = ({ sideSize, level }: GameProps) => {
         });
       }
     },
-    []
+    [dispatch]
   );
 
   return (
@@ -97,18 +105,18 @@ const Game = ({ sideSize, level }: GameProps) => {
         strokeWidth={3}
       />
 
-      <Container ref={containerRef} position={{ x: MENU_SIZE, y: 0 }}>
+      <Container ref={containerRef} position={{ x: 0, y: 0 }}>
         <RectGraphics
           x={0}
           y={0}
-          width={WORLD_SIZE - MENU_SIZE}
-          height={WORLD_SIZE - MENU_SIZE}
+          width={WORLD_SIZE}
+          height={WORLD_SIZE}
           radius={0}
           fill={0xffffff}
           stroke={0x000000}
           strokeWidth={0}
         />
-        <Walls wallSize={WORLD_SIZE - MENU_SIZE} />
+        <Walls wallSize={WORLD_SIZE} />
         {balls.map(({ id, x, y, radius, force }) => (
           <Ball
             key={id}
@@ -139,6 +147,12 @@ const Game = ({ sideSize, level }: GameProps) => {
   );
 };
 
+type BoardProps = {
+  sideSize: number;
+  currentLevel: number;
+  onFinish: () => void;
+};
+
 const STAGE_OPTIONS = {
   antialias: true,
   autoDensity: true,
@@ -146,8 +160,7 @@ const STAGE_OPTIONS = {
   backgroundAlpha: 0,
 };
 
-const Board = ({ sideSize }) => {
-  const [currLevel, setCurrLevel] = useState(0);
+const Board = ({ sideSize, currentLevel, onFinish }: BoardProps) => {
   const containerRef = useRef<PIXI.Container>(null);
 
   useEffect(() => {
@@ -165,7 +178,11 @@ const Board = ({ sideSize }) => {
       <Container ref={containerRef} name="board">
         <StoreProvider>
           <MatterProvider>
-            <Game sideSize={sideSize} level={LEVELS[currLevel]} />
+            <Game
+              sideSize={sideSize}
+              level={LEVELS[currentLevel]}
+              onFinish={onFinish}
+            />
           </MatterProvider>
         </StoreProvider>
       </Container>

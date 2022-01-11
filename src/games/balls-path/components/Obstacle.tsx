@@ -6,7 +6,7 @@ import { Container } from '@inlet/react-pixi';
 import RectGraphics from '@/components/primitives/RectGraphics';
 import CircleGraphics from '@/components/primitives/CircleGraphics';
 
-import { COLLISION, MENU_SIZE, WORLD_SIZE } from '../constants';
+import { COLLISION, WORLD_SIZE } from '../constants';
 import { ObstacleType } from '../types';
 import { ACTIONS, storeCtx } from '../storeCtx';
 import RectBody from './matterBodies/RectBody';
@@ -29,7 +29,7 @@ const getCoordsFromMouse = (
 ) => {
   const getWorldCoords = (num: number) => (num / sideSize) * WORLD_SIZE;
 
-  const x = getWorldCoords(event.data.global.x) - MENU_SIZE;
+  const x = getWorldCoords(event.data.global.x);
   const y = getWorldCoords(event.data.global.y);
 
   return { x, y };

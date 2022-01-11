@@ -1,5 +1,6 @@
 import {
   forwardRef,
+  useCallback,
   useContext,
   useEffect,
   useImperativeHandle,
@@ -12,13 +13,12 @@ import RectGraphics from '@/components/primitives/RectGraphics';
 import CircleGraphics from '@/components/primitives/CircleGraphics';
 import { ShapeRefType } from '@/components/primitives/Shape';
 
-import { WaypointBase } from '@balls/types';
+import { StartWaypoint } from '@balls/types';
 import { BALL_SIZE } from '@balls/constants';
 import { ACTIONS, storeCtx } from '@balls/storeCtx';
 import { tween, Tweenable } from 'shifty';
 
 const CANNON_MARGIN = 8;
-const FORCE = 0.1;
 
 const ANIM_DURATION = 1;
 
@@ -33,12 +33,20 @@ const Cannon = forwardRef((props, ref) => {
         tween({
           render: ({ t }: { t: number }) => {
             if (barrel2Ref.current) {
-              barrel2Ref.current.draw({ y: BALL_SIZE - CANNON_MARGIN * 2 * t });
+              const initialPosition = BALL_SIZE;
+              const diffPosition = -CANNON_MARGIN * 2;
+
+              barrel2Ref.current.draw({
+                y: initialPosition + diffPosition * t,
+              });
             }
 
             if (muzzleRef.current) {
+              const initialPosition = BALL_SIZE * 2 + CANNON_MARGIN;
+              const diffPosition = -CANNON_MARGIN * 3;
+
               muzzleRef.current.draw({
-                y: BALL_SIZE * 2 + CANNON_MARGIN - CANNON_MARGIN * 3 * t,
+                y: initialPosition + diffPosition * t,
               });
             }
           },
@@ -95,17 +103,17 @@ const Cannon = forwardRef((props, ref) => {
 
 Cannon.displayName = 'Cannon';
 
-const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
+const Start = ({ x, y, rotation = 0, forceToApply = 0.1 }: StartWaypoint) => {
   const { dispatch } = useContext(storeCtx);
 
   const cannonRef = useRef<{ fire: () => void } | null>(null);
 
-  const spawnBall = () => {
+  const spawnBall = useCallback(() => {
     const id = nanoid();
 
     const force = {
-      x: Math.sin(rotation) * FORCE,
-      y: Math.cos(rotation) * FORCE,
+      x: Math.cos(rotation + Math.PI / 2) * forceToApply,
+      y: Math.sin(rotation + Math.PI / 2) * forceToApply,
     };
 
     dispatch({
@@ -122,7 +130,7 @@ const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
     if (cannonRef.current) {
       cannonRef.current.fire();
     }
-  };
+  }, [dispatch, forceToApply, rotation, x, y]);
 
   useEffect(() => {
     const intervalId = setInterval(spawnBall, 3000);
@@ -130,7 +138,7 @@ const Start = ({ x, y, rotation = 0 }: WaypointBase) => {
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [spawnBall]);
 
   return (
     <Container x={x} y={y} rotation={rotation}>

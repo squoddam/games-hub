@@ -31,10 +31,15 @@ const BIN_WALL_SIZE = 10;
 
 const SPARKLES_AMOUNT = 10;
 const SPARKLE_RADIUS = 10;
-const SPARKLES_DISTANCE = BALL_SIZE * 4;
+const SPARKLES_MIN_DISTANCE = BALL_SIZE * 2;
+const SPARKLES_MAX_DISTANCE = BALL_SIZE * 4;
+
+type SparklesProps = {
+  isWarning?: boolean;
+};
 
 const Sparkles = memo(
-  forwardRef((props, ref) => {
+  forwardRef(({ isWarning = false }: SparklesProps, ref) => {
     const sparklesRef = useRef<ShapeRefType[]>([]);
 
     const addToSparklesRef = useCallback(
@@ -53,10 +58,10 @@ const Sparkles = memo(
             return {
               x:
                 Math.cos(angle) *
-                randMinMax(-SPARKLES_DISTANCE, SPARKLES_DISTANCE),
+                randMinMax(SPARKLES_MIN_DISTANCE, SPARKLES_MAX_DISTANCE),
               y:
-                Math.sign(angle) *
-                randMinMax(-SPARKLES_DISTANCE, SPARKLES_DISTANCE),
+                Math.sin(angle) *
+                randMinMax(SPARKLES_MIN_DISTANCE, SPARKLES_MAX_DISTANCE),
             };
           });
 
@@ -92,7 +97,7 @@ const Sparkles = memo(
             ref={addToSparklesRef(i)}
             radius={SPARKLE_RADIUS}
             fillAlpha={0}
-            fill={COLORS[randMinMax(0, COLORS.length)]}
+            fill={isWarning ? 0xff0000 : COLORS[randMinMax(0, COLORS.length)]}
           />
         ))}
       </>
@@ -121,7 +126,7 @@ const Counter = ({
 
   return (
     <Container x={x} y={y}>
-      <Sparkles ref={sparklesRef} />
+      <Sparkles ref={sparklesRef} isWarning={collectedAmount === 0} />
       <CircleGraphics
         x={0}
         y={0}
@@ -223,8 +228,8 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
         <RectBody
           x={-BIN_SIZE / 2}
           y={BIN_WALL_SIZE}
-          width={BIN_SIZE}
-          height={BIN_SIZE}
+          width={BIN_SIZE / 2}
+          height={BIN_SIZE / 2}
           options={sensorOptions}
           onCollision={handleSensorCollision}
         />

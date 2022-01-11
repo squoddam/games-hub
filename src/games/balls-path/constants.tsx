@@ -1,5 +1,4 @@
 export const WORLD_SIZE = 1000;
-export const MENU_SIZE = 100;
 
 export const COLLISION = {
   CATEGORY: {
@@ -13,3 +12,5 @@ export const COLLISION = {
 export const BALL_SIZE = 30;
 
 export const COLORS = [0xfbb037, 0x6622cc, 0x84d473, 0xfb62f6, 0x333333];
+
+export const REQUIRED_AMOUNT = 5;
