@@ -1,13 +1,12 @@
 {
-  "name": "react-typescript",
+  "name": "games-hub",
   "version": "1.0.0",
-  "description": "React and TypeScript example starter project",
+  "description": "Games hub with small games",
   "keywords": [
     "typescript",
     "react",
     "starter"
   ],
-  "main": "src/index.tsx",
   "dependencies": {
     "@inlet/react-pixi": "6.6.5",
     "@react-spring/types": "9.3.0",
