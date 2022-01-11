@@ -1,13 +1,15 @@
 import { memo, useMemo, useRef } from 'react';
-import { Vector2 } from '@/types';
-
-import RectGraphics from '@/components/primitives/RectGraphics';
 import { Container, Text } from '@inlet/react-pixi';
 import { TextStyle, Text as PixiText } from '@pixi/text';
-import { useAnime } from '@/hooks';
-import CircleGraphics from '@/components/primitives/CircleGraphics';
 
-const minesCountsColors = [
+import { Vector2 } from '@/types';
+import { useTweenable } from '@/hooks';
+import RectGraphics from '@/components/primitives/RectGraphics';
+import CircleGraphics from '@/components/primitives/CircleGraphics';
+import { ShapeRefType } from '@/components/primitives/Shape';
+
+const MINE_PADDING = 5;
+const MINES_COUNTS_COLORS = [
   0x01579b, 0x019b62, 0xa2c80b, 0xf2b918, 0xf26818, 0xa73e01, 0xa70101,
   0x810639,
 ];
@@ -40,37 +42,47 @@ const Cell = ({
   nearbyMinesCount,
   onClick,
 }: CellProps) => {
-  const padding = useMemo(
-    () => cellBorderPadding + (isRevealed ? 5 : 0),
-    [cellBorderPadding, isRevealed]
-  );
   const [c, r] = coords;
   const left = c * cellSize;
   const top = r * cellSize;
 
   const to = {
-    x: !isRevealed ? left + padding : left + cellSize / 2,
-    y: !isRevealed ? top + padding : top + cellSize / 2,
-    width: !isRevealed ? cellSize - padding * 2 : 0,
-    height: !isRevealed ? cellSize - padding * 2 : 0,
+    x: isRevealed ? left + cellSize / 2 : left + cellBorderPadding,
+    y: isRevealed ? top + cellSize / 2 : top + cellBorderPadding,
+    width: isRevealed ? 0 : cellSize - cellBorderPadding * 2,
+    height: isRevealed ? 0 : cellSize - cellBorderPadding * 2,
   };
 
-  const textRef = useRef<PixiText>(null);
+  const rectRef = useRef<ShapeRefType>();
 
-  const fSizeMemo = useMemo(
-    () => ({ fSize: isRevealed ? 36 : 1 }),
+  useTweenable(
+    {
+      render: (state: typeof to) => {
+        if (rectRef.current) {
+          rectRef.current.draw(state);
+        }
+      },
+      to,
+      duration: 200,
+    },
     [isRevealed]
   );
 
-  useAnime({
-    toProps: fSizeMemo,
-    onUpdate: ({ fSize }) => {
-      if (textRef.current) {
-        textRef.current.style.fontSize = fSize;
-      }
+  const textRef = useRef<PixiText>(null);
+
+  useTweenable(
+    {
+      render: ({ fSize }) => {
+        if (textRef.current) {
+          textRef.current.style.fontSize = fSize;
+        }
+      },
+      to: { fSize: isRevealed ? 36 : 1 },
+      duration: 300,
+      easing: 'linear',
     },
-    config: { duration: 300 },
-  });
+    [isRevealed]
+  );
 
   const handleClick = () => {
     onClick({ c, r });
@@ -82,7 +94,7 @@ const Cell = ({
         <CircleGraphics
           x={left + cellSize / 2}
           y={top + cellSize / 2}
-          radius={cellSize / 2 - padding * 2}
+          radius={cellSize / 2 - (cellBorderPadding + MINE_PADDING) * 2}
           fill={0xff0000}
         />
       )}
@@ -93,11 +105,15 @@ const Cell = ({
           y={top + cellSize / 2}
           anchor={0.5}
           text={String(nearbyMinesCount)}
-          style={getTextStyle(24, minesCountsColors[nearbyMinesCount - 1])}
+          style={getTextStyle(24, MINES_COUNTS_COLORS[nearbyMinesCount - 1])}
         />
       )}
       <RectGraphics
-        {...to}
+        ref={rectRef}
+        x={left}
+        y={top}
+        width={cellSize}
+        height={cellSize}
         radius={20}
         onClick={handleClick}
         animConfig={{ duration: 300 }}

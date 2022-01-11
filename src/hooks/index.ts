@@ -1,3 +1,3 @@
 export * from './common';
 
-export * from './useAnime';
+export * from './useTweenable';
