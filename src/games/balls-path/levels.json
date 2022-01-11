@@ -1,0 +1,78 @@
+[
+  {
+    "id": "level-0",
+    "start": {
+      "id": "start-0",
+      "x": 200,
+      "y": 100
+    },
+    "finish": {
+      "id": "finish-0",
+      "x": 600,
+      "y": 800,
+      "rotation": 1
+    }
+  },
+  {
+    "id": "level-1",
+    "start": {
+      "id": "start-1",
+      "x": 200,
+      "y": 100
+    },
+    "finish": {
+      "id": "finish-1",
+      "x": 800,
+      "y": 800,
+      "rotation": 1
+    }
+  },
+  {
+    "id": "level-2",
+    "start": {
+      "id": "start-2",
+      "x": 200,
+      "y": 100,
+      "rotation": -0.5,
+      "forceToApply": 0.5
+    },
+    "finish": {
+      "id": "finish-2",
+      "x": 200,
+      "y": 800,
+      "rotation": -0.5
+    }
+  },
+  {
+    "id": "level-3",
+    "start": {
+      "id": "start-3",
+      "x": 400,
+      "y": 500,
+      "rotation": 1,
+      "forceToApply": 1
+    },
+    "finish": {
+      "id": "finish-3",
+      "x": 600,
+      "y": 500,
+      "rotation": 0
+    }
+  },
+  {
+    "id": "level-4",
+    "start": {
+      "id": "start-4",
+      "x": 400,
+      "y": 500,
+      "rotation": 0.5,
+      "forceToApply": 1
+    },
+    "finish": {
+      "id": "finish-4",
+      "x": 600,
+      "y": 500,
+      "rotation": -0.5
+    }
+  }
+]

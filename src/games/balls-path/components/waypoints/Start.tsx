@@ -112,8 +112,8 @@ const Start = ({ x, y, rotation = 0, forceToApply = 0.1 }: StartWaypoint) => {
     const id = nanoid();
 
     const force = {
-      x: Math.cos(rotation + Math.PI / 2) * forceToApply,
-      y: Math.sin(rotation + Math.PI / 2) * forceToApply,
+      x: Math.cos(rotation * Math.PI + Math.PI / 2) * forceToApply,
+      y: Math.sin(rotation * Math.PI + Math.PI / 2) * forceToApply,
     };
 
     dispatch({
@@ -141,7 +141,7 @@ const Start = ({ x, y, rotation = 0, forceToApply = 0.1 }: StartWaypoint) => {
   }, [spawnBall]);
 
   return (
-    <Container x={x} y={y} rotation={rotation}>
+    <Container x={x} y={y} rotation={rotation * Math.PI}>
       <Cannon ref={cannonRef} />
     </Container>
   );

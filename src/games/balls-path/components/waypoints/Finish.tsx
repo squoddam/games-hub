@@ -248,8 +248,8 @@ const Bin = ({ x, y, rotation = 0 }: BinProps) => {
   );
 };
 
-const Finish = ({ x, y, rotation }: WaypointBase) => {
-  return <Bin x={x} y={y} rotation={rotation} />;
+const Finish = ({ x, y, rotation = 0 }: WaypointBase) => {
+  return <Bin x={x} y={y} rotation={rotation * Math.PI} />;
 };
 
 export default memo(Finish);

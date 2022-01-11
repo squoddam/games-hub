@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
+
 import { useWindowResize } from '@/hooks';
 import { randMinMax } from '@/utils';
+import styles from '@/styles.module.css';
+
 import Board from './Board';
 
-import styles from './styles.module.css';
 
 enum Status {
   ready,

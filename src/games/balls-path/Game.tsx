@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid';
 
 import RectGraphics from '@/components/primitives/RectGraphics';
 
-import LEVELS from './levels';
+import LEVELS from './levels.json';
 import { MatterProvider } from './MatterCtx';
 import Walls from './components/Walls';
 import { COLLISION, REQUIRED_AMOUNT, WORLD_SIZE } from './constants';
