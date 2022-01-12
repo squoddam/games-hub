@@ -1,6 +1,8 @@
 import React, { Reducer, useReducer } from 'react';
 import { ObstacleType, WaypointBase } from './types';
 
+const MAX_OBSTACLES = 3;
+
 type BallInfo = {
   id: string;
   x: number;
@@ -85,7 +87,7 @@ const actionHandlers: Record<string, StoreReducer> = {
   }),
   [ACTIONS.ADD_OBSTACLE]: (store, { payload }) => ({
     ...store,
-    obstacles: [...store.obstacles, payload],
+    obstacles: [...store.obstacles, payload].slice(-MAX_OBSTACLES),
   }),
   [ACTIONS.REMOVE_OBSTACLE]: (store, { payload: { id } }) => ({
     ...store,

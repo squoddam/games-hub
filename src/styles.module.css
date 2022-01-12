@@ -11,9 +11,9 @@
 }
 
 .menuList {
-  @apply space-y-8 flex flex-col justify-center text-xl;
+  @apply space-y-8 flex flex-col justify-center text-xl w-full;
 }
 
 .menuItem {
-  @apply text-center cursor-pointer;
+  @apply text-center cursor-pointer bg-opacity-0 hover:bg-blue-50 hover:bg-opacity-100;
 }

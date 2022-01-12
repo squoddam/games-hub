@@ -26,7 +26,7 @@ import { randMinMax, times } from '@/utils';
 import { ShapeRefType } from '@/components/primitives/Shape';
 import { tween } from 'shifty';
 
-const BIN_SIZE = BALL_SIZE * 2.2;
+const BIN_SIZE = BALL_SIZE * 2.5;
 const BIN_WALL_SIZE = 10;
 
 const SPARKLES_AMOUNT = 10;

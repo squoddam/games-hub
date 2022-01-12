@@ -39,7 +39,7 @@ const LevelsMenu = ({
       {LEVELS.map(({ id }, i) => (
         <div
           key={id}
-          className="border-4 border-black border-solid cursor-pointer font-bold p-10 rounded-2xl text-3xl"
+          className="border-4 border-black border-solid cursor-pointer font-bold p-10 rounded-2xl text-3xl hover:bg-purple-50"
           onClick={() => onLevelClick(i)}
         >
           {i + 1}
